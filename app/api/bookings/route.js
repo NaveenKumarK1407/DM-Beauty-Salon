@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server';
 import { saveBooking, listBookings } from '@/lib/store';
 import { notifyStudio } from '@/lib/notify';
+import { getPhoneValidationError, normalizePhoneDigits } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,12 @@ export async function POST(request) {
     );
   }
 
+  const phoneError = getPhoneValidationError(phone);
+  if (phoneError) {
+    return NextResponse.json({ error: phoneError }, { status: 400 });
+  }
+  const phoneNormalized = normalizePhoneDigits(phone);
+
   const reference = makeRef();
   const booking = await saveBooking({
     reference,
@@ -36,7 +43,7 @@ export async function POST(request) {
     date: date || null,
     slot: slot || null,
     name,
-    phone,
+    phone: `+91 ${phoneNormalized}`,
     email: email || null,
     notes: notes || null,
     price: price ?? null,

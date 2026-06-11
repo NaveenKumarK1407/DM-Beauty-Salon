@@ -7,10 +7,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { SERVICES, SVC_CATEGORIES, IconArrow, IconArrowLeft, IconCheck, IconWa, ICON_MAP, IconPackage } from '@/lib/data';
 import { useSettings } from '@/lib/settings';
 import { cachedFetchJson } from '@/lib/clientCache';
+import { getPhoneValidationError, isValidPhone10, normalizePhoneDigits } from '@/lib/utils';
+import { formatTime12h } from '@/lib/hours';
 
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+function formatSlotLabel(slot) {
+  if (!slot) return '—';
+  return formatTime12h(slot).replace(' am', ' AM').replace(' pm', ' PM');
+}
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const SLOTS = ['10:00', '11:00', '12:00', '13:00', '14:30', '15:30', '16:30', '17:30', '18:30'];
+const SLOTS = ['10:00', '11:00', '12:00', '13:00', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:00'];
 
 export function BookingFlow() {
   const router = useRouter();
@@ -49,7 +56,7 @@ export function BookingFlow() {
   const canAdvance = [
     !!data.serviceId,
     !!data.date && !!data.slot,
-    !!data.name && !!data.phone,
+    !!data.name && isValidPhone10(data.phone),
     true,
   ][step];
 
@@ -67,7 +74,7 @@ export function BookingFlow() {
           date: data.date ? data.date.toDateString() : null,
           slot: data.slot,
           name: data.name,
-          phone: data.phone,
+          phone: `+91 ${normalizePhoneDigits(data.phone)}`,
           email: data.email || null,
           notes: data.notes || null,
         }),
@@ -96,7 +103,7 @@ export function BookingFlow() {
 
   const steps = [
     { lbl: 'Service', val: svc ? svc.name : 'Choose service' },
-    { lbl: 'Date & Time', val: data.date ? `${MONTHS[data.date.getMonth()].slice(0, 3)} ${data.date.getDate()}${data.slot ? ', ' + data.slot : ''}` : 'Select' },
+    { lbl: 'Date & Time', val: data.date ? `${MONTHS[data.date.getMonth()].slice(0, 3)} ${data.date.getDate()}${data.slot ? ', ' + formatSlotLabel(data.slot) : ''}` : 'Select' },
     { lbl: 'Your Details', val: data.name || 'Contact info' },
     { lbl: 'Confirm', val: 'Review & book' },
   ];
@@ -231,12 +238,6 @@ function StepDate({ data, update }) {
   for (let i = 0; i < firstDow; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(month.getFullYear(), month.getMonth(), d));
 
-  const busy = (date, slot) => {
-    if (!date) return false;
-    const h = (date.getDate() + slot.charCodeAt(0)) % 7;
-    return h < 2;
-  };
-
   return (
     <>
       <h2>When works for you?</h2>
@@ -272,12 +273,11 @@ function StepDate({ data, update }) {
           {data.date ? (
             <div className="slot-grid">
               {SLOTS.map((t) => {
-                const isBusy = busy(data.date, t);
                 const sel = data.slot === t;
                 return (
                   <div key={t}
-                    className={'slot ' + (isBusy ? 'busy ' : '') + (sel ? 'sel' : '')}
-                    onClick={() => !isBusy && update({ slot: t })}>{t}</div>
+                    className={'slot ' + (sel ? 'sel' : '')}
+                    onClick={() => update({ slot: t })}>{formatSlotLabel(t)}</div>
                 );
               })}
             </div>
@@ -293,6 +293,10 @@ function StepDate({ data, update }) {
 }
 
 function StepDetails({ data, update, svc }) {
+  const phoneDigits = normalizePhoneDigits(data.phone);
+  const phoneError = getPhoneValidationError(data.phone);
+  const showPhoneError = phoneDigits.length > 0 && !!phoneError;
+
   return (
     <>
       <h2>And your details?</h2>
@@ -302,11 +306,22 @@ function StepDetails({ data, update, svc }) {
           <div className="field-row">
             <div className="field">
               <label>Full name</label>
-              <input type="text" value={data.name} onChange={(e) => update({ name: e.target.value })} placeholder="e.g. Sravanthi Reddy" />
+              <input type="text" value={data.name} onChange={(e) => update({ name: e.target.value })} placeholder="Enter your full name" />
             </div>
             <div className="field">
               <label>Phone</label>
-              <input type="tel" value={data.phone} onChange={(e) => update({ phone: e.target.value })} placeholder="+91 98765 43210" />
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={data.phone}
+                onChange={(e) => update({ phone: e.target.value })}
+                placeholder="10-digit mobile number"  
+                aria-invalid={showPhoneError}
+                style={showPhoneError ? { borderColor: 'var(--danger)' } : undefined}
+              />
+              {showPhoneError && (
+                <span className="field-error">{phoneError}</span>
+              )}
             </div>
           </div>
           <div className="field">
@@ -325,7 +340,7 @@ function StepDetails({ data, update, svc }) {
             <div className="line"><span>Service</span><strong style={{ fontFamily: 'var(--font-display)', fontSize: 17 }}>{svc.name}</strong></div>
             <div className="line"><span>Duration</span><span>{svc.duration}</span></div>
             <div className="line"><span>Date</span><span>{data.date ? data.date.toDateString().split(' ').slice(0, 3).join(' ') : '—'}</span></div>
-            <div className="line"><span>Time</span><span>{data.slot || '—'}</span></div>
+            <div className="line"><span>Time</span><span>{formatSlotLabel(data.slot)}</span></div>
             <div className="line total"><span>Total</span><span>{svc.price !== undefined && svc.price !== null && svc.price !== '' ? `₹${Number(svc.price).toLocaleString('en-IN')}` : 'On request'}</span></div>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>No card needed — pay at the studio.</div>
           </>)}
@@ -359,7 +374,7 @@ function StepConfirm({ data, svc, result, error, submitting, onHome, onAnother, 
     `Reference: ${ref}\n` +
     (svc ? `Service: ${svc.name}\n` : '') +
     (data.date ? `Date: ${data.date.toDateString()}\n` : '') +
-    (data.slot ? `Time: ${data.slot}\n` : '') +
+    (data.slot ? `Time: ${formatSlotLabel(data.slot)}\n` : '') +
     (svc?.duration ? `Duration: ${svc.duration}\n` : '') +
     `Name: ${data.name}\n` +
     `Phone: ${data.phone}`
@@ -375,7 +390,7 @@ function StepConfirm({ data, svc, result, error, submitting, onHome, onAnother, 
         <div className="confirm-summary summary">
           <div className="line"><span>Service</span><strong style={{ fontFamily: 'var(--font-display)', fontSize: 18 }}>{svc.name}</strong></div>
           <div className="line"><span>Date</span><span>{data.date.toDateString()}</span></div>
-          <div className="line"><span>Time</span><span>{data.slot}</span></div>
+          <div className="line"><span>Time</span><span>{formatSlotLabel(data.slot)}</span></div>
           <div className="line"><span>Duration</span><span>{svc.duration}</span></div>
           <div className="line"><span>Stylist</span><span>Devi Madhuri</span></div>
           <div className="line total"><span>Total</span><span>{svc.price !== undefined && svc.price !== null && svc.price !== '' ? `₹${Number(svc.price).toLocaleString('en-IN')}` : 'On request'}</span></div>

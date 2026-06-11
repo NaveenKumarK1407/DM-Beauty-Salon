@@ -118,7 +118,7 @@ export const TESTIMONIALS = [
 
 // ── Appointments (admin) ────────────────────────────────
 export const APPOINTMENTS = [
-  { time: '10:00', name: 'Sravanthi Reddy', svc: 'Bridal Signature', price: 14500, status: 'confirmed' },
+  { time: '10:00', name: 'Sravan', svc: 'Bridal Signature', price: 14500, status: 'confirmed' },
   { time: '11:30', name: 'Pranavi M.', svc: 'Gold Glow Facial', price: 2200, status: 'confirmed' },
   { time: '12:00', name: 'Anusha P.', svc: 'Monthly Glow Package', price: 4500, status: 'pending' },
   { time: '14:30', name: 'Bhavana K.', svc: 'Engagement Look (Trial)', price: 8500, status: 'confirmed' },
