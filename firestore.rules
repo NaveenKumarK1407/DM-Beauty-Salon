@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Bookings ──────────────────────────────────────────────
+    // Anyone can create a booking (public booking form).
+    // Only authenticated admin can read and update status.
+    match /bookings/{id} {
+      allow create: if request.resource.data.keys().hasAll(['name', 'phone', 'serviceId'])
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0
+                    && request.resource.data.phone is string
+                    && request.resource.data.phone.size() > 0;
+      // Signed-in admin can read and update status only
+      allow read: if request.auth != null;
+      allow update: if request.auth != null
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['status']); // only the status field can be changed
+      allow delete: if false;
+    }
+
+    // ── Contact messages ─────────────────────────────────────
+    // Anyone can submit. Signed-in admin can read.
+    match /messages/{id} {
+      allow create: if request.resource.data.keys().hasAll(['name', 'phone'])
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() > 0;
+      allow read, update: if request.auth != null;
+      allow delete: if false;
+    }
+
+    // ── FCM push tokens ──────────────────────────────────────
+    // Client can write its own token (keyed by token string).
+    // Admin can read (to send notifications).
+    match /fcmTokens/{token} {
+      allow write: if request.resource.data.token == token
+                   && request.resource.data.token is string
+                   && request.resource.data.token.size() > 10;
+      allow read: if request.auth != null;
+      allow delete: if false;
+    }
+
+    // ── Payments ─────────────────────────────────────────────
+    // Only authenticated admin can read and write payments.
+    match /payments/{id} {
+      allow read, write: if request.auth != null;
+    }
+
+    // ── Deny everything else ─────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
