@@ -2,7 +2,7 @@
 // Top nav + mobile drawer + Marquee + Footer, adapted for Next.js routing.
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { IconArrow, IconClock, IconMap } from '@/lib/data';
 import { ThemeToggle } from './ThemeToggle';
 import { Socials } from './Socials';
@@ -63,7 +63,14 @@ function LocationDropdown({ settings, city, isOpen }) {
 export function TopNav() {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { settings } = useSettings();
+
+  // Warm route bundles in the background so menu clicks feel instant.
+  React.useEffect(() => {
+    LINKS.forEach((l) => router.prefetch(l.href));
+    router.prefetch('/booking');
+  }, [router]);
   const isActive = (href) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
   const city = settings?.address ? getCityFromAddress(settings.address) : 'Medak';
   const isOpen = isStudioOpen(settings);

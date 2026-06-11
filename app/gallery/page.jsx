@@ -1,5 +1,5 @@
 import { GalleryView } from '@/components/GalleryView';
-import { getStudioSettings } from '@/lib/store';
+import { getStudioSettings, listGallery } from '@/lib/store';
 import { getCityFromAddress } from '@/lib/utils';
 
 export async function generateMetadata() {
@@ -14,6 +14,7 @@ export async function generateMetadata() {
   };
 }
 
-export default function GalleryPage() {
-  return <GalleryView />;
+export default async function GalleryPage() {
+  const gallery = await listGallery();
+  return <GalleryView initialGallery={gallery} />;
 }

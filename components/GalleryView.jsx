@@ -4,20 +4,21 @@ import React from 'react';
 import { GALLERY, GALLERY_CATEGORIES, IconInsta } from '@/lib/data';
 import { cachedFetchJson } from '@/lib/clientCache';
 
-export function GalleryView() {
+export function GalleryView({ initialGallery = null }) {
   const [cat, setCat] = React.useState('All');
   const [lightbox, setLightbox] = React.useState(null);
-  const [gallery, setGallery] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
+  const [gallery, setGallery] = React.useState(initialGallery ?? []);
+  const [loading, setLoading] = React.useState(initialGallery === null);
 
   React.useEffect(() => {
+    if (initialGallery !== null) return;
     cachedFetchJson('/api/gallery')
       .then((j) => {
         if (j.gallery) setGallery(j.gallery);
       })
       .catch((err) => console.error('Failed to load gallery:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [initialGallery]);
 
   const categories = React.useMemo(() => {
     const cats = new Set(['All']);

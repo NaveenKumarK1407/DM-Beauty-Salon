@@ -285,9 +285,26 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
 .hero-text h1 .italic { font-style: italic; color: var(--gold-deep); }
 .hero-meta { display: flex; align-items: center; gap: 24px; color: var(--muted); font-size: 13px; letter-spacing: 0.15em; text-transform: uppercase; }
 .hero-img-wrap {
-  position: relative; overflow: hidden;
+  position: relative;
+  overflow: hidden;
+  background: #0a0a0a;
 }
-.hero-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.hero-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(10px) brightness(0.35);
+  transform: scale(1.08);
+  opacity: 0.7;
+}
+.hero-img-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.78);
+  pointer-events: none;
+}
 .hero-tag {
   position: absolute; bottom: 32px; right: 32px;
   background: rgba(255,255,255,0.94);

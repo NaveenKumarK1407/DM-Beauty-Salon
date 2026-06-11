@@ -97,13 +97,22 @@ function useRealtimeBookings() {
 function useRealtimePayments() {
   const [payments, setPayments] = React.useState(null); // null = loading
   const [error, setError]       = React.useState(null);
+  const usesRest = React.useRef(false);
+
+  const refreshPayments = React.useCallback(() => {
+    if (!usesRest.current) return;
+    fetch('/api/payments')
+      .then((r) => r.json())
+      .then((j) => setPayments(j.payments || []))
+      .catch(() => setPayments([]));
+  }, []);
 
   React.useEffect(() => {
     let unsub = null;
 
     getClientDb().then((db) => {
       if (!db) {
-        // Firebase not configured — fall back to REST GET
+        usesRest.current = true;
         fetch('/api/payments')
           .then((r) => r.json())
           .then((j) => setPayments(j.payments || []))
@@ -111,7 +120,6 @@ function useRealtimePayments() {
         return;
       }
 
-      // Real-time Firestore listener
       import('firebase/firestore').then(({ collection, query, orderBy, onSnapshot }) => {
         const q = query(collection(db, 'payments'), orderBy('createdAt', 'desc'));
         unsub = onSnapshot(
@@ -125,7 +133,7 @@ function useRealtimePayments() {
     return () => { if (unsub) unsub(); };
   }, []);
 
-  return { payments, error };
+  return { payments, error, refreshPayments };
 }
 
 // ── Update booking status ─────────────────────────────────────
@@ -508,7 +516,7 @@ export function AdminDashboard({ user, onSignOut }) {
   const router = useRouter();
   const [tab, setTab] = React.useState('dashboard');
   const { bookings: rawBookings, error: rtError } = useRealtimeBookings();
-  const { payments: rawPayments, error: paymentsError } = useRealtimePayments();
+  const { payments: rawPayments, error: paymentsError, refreshPayments } = useRealtimePayments();
   const [paymentModalOpen, setPaymentModalOpen] = React.useState(false);
 
   // Dynamic services, gallery & packages state
@@ -694,6 +702,7 @@ export function AdminDashboard({ user, onSignOut }) {
             loading={rawPayments === null} 
             modalOpen={paymentModalOpen}
             setModalOpen={setPaymentModalOpen}
+            onRefresh={refreshPayments}
           />
         )}
         {tab === 'packages'   && <PackagesAdminView packages={packages} loading={packages===null} onRefresh={fetchPackages} />}
@@ -3857,12 +3866,14 @@ function SettingsView({ user }) {
 }
 
 // ── Walk-in Cash View ──────────────────────────────────────────
-function WalkinCashView({ payments = [], loading, modalOpen, setModalOpen }) {
+function WalkinCashView({ payments = [], loading, modalOpen, setModalOpen, onRefresh }) {
   const { tweaks } = useAppearance();
   const isDark = tweaks.theme === 'dark';
-  const { toast } = useSnackbar();
+  const { toast, confirm } = useSnackbar();
   const [activePeriod, setActivePeriod] = React.useState('today');
   const [busy, setBusy] = React.useState(false);
+  const [deletingId, setDeletingId] = React.useState(null);
+  const [editingPayment, setEditingPayment] = React.useState(null);
   const [startDate, setStartDate] = React.useState('');
   const [endDate, setEndDate] = React.useState('');
   const [preset, setPreset] = React.useState('all');
@@ -3907,46 +3918,83 @@ function WalkinCashView({ payments = [], loading, modalOpen, setModalOpen }) {
   const [formTime, setFormTime] = React.useState('');
   const [formPaidBy, setFormPaidBy] = React.useState('Cash');
 
-  // Reset form when modal opens
+  // Reset or populate form when modal opens
   React.useEffect(() => {
-    if (modalOpen) {
-      const now = new Date();
-      setFormTitle('');
-      setFormAmount('');
-      setFormDate(now.toISOString().split('T')[0]);
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      setFormTime(`${hours}:${minutes}`);
-      setFormPaidBy('Cash');
+    if (!modalOpen) {
+      setEditingPayment(null);
+      return;
     }
-  }, [modalOpen]);
+    if (editingPayment) {
+      setFormTitle(editingPayment.title || '');
+      setFormAmount(String(editingPayment.amount ?? ''));
+      setFormDate(editingPayment.date || new Date().toISOString().split('T')[0]);
+      setFormTime(editingPayment.time || '10:00');
+      setFormPaidBy(editingPayment.paidBy || 'Cash');
+      return;
+    }
+    const now = new Date();
+    setFormTitle('');
+    setFormAmount('');
+    setFormDate(now.toISOString().split('T')[0]);
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    setFormTime(`${hours}:${minutes}`);
+    setFormPaidBy('Cash');
+  }, [modalOpen, editingPayment]);
+
+  const openEdit = (payment) => {
+    setEditingPayment(payment);
+    setModalOpen(true);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formTitle || !formAmount) return;
     setBusy(true);
+    const payload = {
+      title: formTitle,
+      amount: Number(formAmount),
+      date: formDate,
+      time: formTime,
+      paidBy: formPaidBy,
+    };
     try {
-      const res = await fetch('/api/payments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: formTitle,
-          amount: Number(formAmount),
-          date: formDate,
-          time: formTime,
-          paidBy: formPaidBy,
-        }),
-      });
+      const isEdit = !!editingPayment?.id;
+      const res = await fetch(
+        isEdit ? `/api/payments/${editingPayment.id}` : '/api/payments',
+        {
+          method: isEdit ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
       if (!res.ok) {
         const errData = await res.json();
         throw new Error(errData.error || 'Failed to save payment');
       }
       setModalOpen(false);
-      toast('Payment logged successfully!');
+      onRefresh?.();
+      toast(isEdit ? 'Payment updated.' : 'Payment logged successfully!');
     } catch (err) {
       toast(err.message, 'error');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    const ok = await confirm('Delete this walk-in payment? This cannot be undone.');
+    if (!ok) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/payments/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete payment');
+      onRefresh?.();
+      toast('Payment deleted.', 'info');
+    } catch (err) {
+      toast(err.message, 'error');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -4124,6 +4172,37 @@ function WalkinCashView({ payments = [], loading, modalOpen, setModalOpen }) {
           color: var(--muted);
           opacity: 0.25;
           font-weight: 600;
+        }
+        .payment-card-actions {
+          display: flex;
+          gap: 8px;
+          margin-top: 4px;
+        }
+        .payment-card-actions button {
+          background: var(--bg);
+          border: 1px solid var(--line);
+          border-radius: 20px;
+          font-size: 11px;
+          font-weight: 500;
+          padding: 6px 14px;
+          cursor: pointer;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: var(--ink);
+        }
+        .payment-card-actions button:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        .payment-card-actions .payment-delete-btn {
+          border-radius: 50%;
+          width: 28px;
+          height: 28px;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--danger);
         }
 
         @media (max-width: 1024px) {
@@ -4347,6 +4426,21 @@ function WalkinCashView({ payments = [], loading, modalOpen, setModalOpen }) {
                     border: `1px solid ${b.border}`
                   }}>{p.paidBy}</span>
                 </div>
+
+                <div className="payment-card-actions">
+                  <button type="button" onClick={() => openEdit(p)} disabled={deletingId === p.id}>
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="payment-delete-btn"
+                    onClick={() => handleDelete(p.id)}
+                    disabled={!p.id || deletingId === p.id}
+                    title="Delete payment"
+                  >
+                    <TrashIcon />
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -4359,7 +4453,9 @@ function WalkinCashView({ payments = [], loading, modalOpen, setModalOpen }) {
           <div style={{ background: 'var(--bg)', border: '1px solid var(--line)', borderRadius: 12, width: '100%', maxWidth: 420, padding: '20px 24px', boxSizing: 'border-box' }} className="fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
               <div>
-                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 24, margin: 0, color: 'var(--ink)' }}>New Payment</h3>
+                <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 24, margin: 0, color: 'var(--ink)' }}>
+                  {editingPayment ? 'Edit Payment' : 'New Payment'}
+                </h3>
                 <small style={{ display: 'block', textTransform: 'uppercase', letterSpacing: '0.08em', fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>Walk-in / Offline Entry</small>
               </div>
               <button type="button" onClick={() => setModalOpen(false)} style={{
@@ -4570,7 +4666,7 @@ function WalkinCashView({ payments = [], loading, modalOpen, setModalOpen }) {
                   Cancel
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={busy} style={{ flex: 1, justifyContent: 'center', borderRadius: 24, fontSize: 12, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', height: 40 }}>
-                  {busy ? 'Saving…' : 'Save Payment'}
+                  {busy ? 'Saving…' : (editingPayment ? 'Update Payment' : 'Save Payment')}
                 </button>
               </div>
             </form>

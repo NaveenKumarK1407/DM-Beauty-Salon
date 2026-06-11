@@ -1,5 +1,5 @@
 import { ServicesView } from '@/components/ServicesView';
-import { getStudioSettings } from '@/lib/store';
+import { getStudioSettings, listServices, listPackages } from '@/lib/store';
 import { getCityFromAddress } from '@/lib/utils';
 
 export async function generateMetadata() {
@@ -14,6 +14,7 @@ export async function generateMetadata() {
   };
 }
 
-export default function ServicesPage() {
-  return <ServicesView />;
+export default async function ServicesPage() {
+  const [services, packages] = await Promise.all([listServices(), listPackages()]);
+  return <ServicesView initialServices={services} initialPackages={packages} />;
 }

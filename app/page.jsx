@@ -4,7 +4,7 @@ import { Marquee } from '@/components/Nav';
 import { Packages } from '@/components/Packages';
 import { MapEmbed } from '@/components/MapMockup';
 import { TESTIMONIALS, IconArrow, IconMap, IconPhone, IconClock } from '@/lib/data';
-import { listServices, listGallery, listReviews, getStudioSettings } from '@/lib/store';
+import { listServices, listGallery, listReviews, listPackages, getStudioSettings } from '@/lib/store';
 import { getCityFromAddress, isStudioOpen } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -239,10 +239,13 @@ function ContactPreview({ settings }) {
 }
 
 export default async function HomePage() {
-  const services = await listServices();
-  const gallery = await listGallery();
-  const reviews = await listReviews();
-  const settings = await getStudioSettings();
+  const [services, gallery, reviews, packages, settings] = await Promise.all([
+    listServices(),
+    listGallery(),
+    listReviews(),
+    listPackages(),
+    getStudioSettings(),
+  ]);
   const city = getCityFromAddress(settings?.address);
 
   return (
@@ -251,7 +254,7 @@ export default async function HomePage() {
       <Marquee />
       <FeaturedServices services={services} />
       <AboutStrip city={city} />
-      <Packages />
+      <Packages initialPackages={packages} />
       <GalleryPreview gallery={gallery} />
       <Testimonials reviews={reviews} />
       <ContactPreview settings={settings} />

@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "description": "DM Beauty Parlour — a small, considered beauty studio in  Next.js, SEO-friendly, with Firebase-backed bookings and notifications.",
     "scripts": {
-        "dev": "next dev",
+        "dev": "next dev --turbo",
         "build": "next build",
         "start": "next start",
         "lint": "next lint"

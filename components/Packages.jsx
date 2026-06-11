@@ -4,16 +4,17 @@ import React from 'react';
 import Link from 'next/link';
 import { cachedFetchJson } from '@/lib/clientCache';
 
-export function Packages() {
-  const [packages, setPackages] = React.useState([]);
+export function Packages({ initialPackages = null }) {
+  const [packages, setPackages] = React.useState(initialPackages ?? []);
 
   React.useEffect(() => {
+    if (initialPackages !== null) return;
     cachedFetchJson('/api/packages')
       .then((data) => {
         if (data.packages) setPackages(data.packages);
       })
       .catch((err) => console.error('Failed to fetch packages:', err));
-  }, []);
+  }, [initialPackages]);
 
   const scrollPkgs = [...packages, ...packages, ...packages, ...packages];
   return (

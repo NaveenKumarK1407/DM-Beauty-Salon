@@ -29,19 +29,20 @@ const SkeletonCard = () => (
   </div>
 );
 
-export function ServicesView() {
+export function ServicesView({ initialServices = null, initialPackages = null }) {
   const [cat, setCat] = React.useState('All');
-  const [services, setServices] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
+  const [services, setServices] = React.useState(initialServices ?? []);
+  const [loading, setLoading] = React.useState(initialServices === null);
 
   React.useEffect(() => {
+    if (initialServices !== null) return;
     cachedFetchJson('/api/services')
       .then((j) => {
         if (j.services) setServices(j.services);
       })
       .catch((err) => console.error('Failed to load services:', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [initialServices]);
 
   const publicServices = React.useMemo(() => {
     return services;
@@ -313,7 +314,7 @@ export function ServicesView() {
         `}</style>
       </section>
 
-      <Packages />
+      <Packages initialPackages={initialPackages} />
 
       <section className="section section-dark" style={{ padding: '28px 0' }}>
         <div className="container" style={{ textAlign: 'center' }}>
