@@ -100,9 +100,10 @@ export function TopNav() {
               <span className="brand-city">{city}</span>
               <span className="brand-day">
                 {mobileBrand.prefix && (
-                  <><span className="brand-day-prefix">{mobileBrand.prefix}</span><span className="brand-day-sep"> · </span></>
+                  <span className="brand-day-prefix">{mobileBrand.prefix}</span>
                 )}
-                <span className={mobileBrand.isOpen ? 'brand-day-open' : 'brand-day-closed'}>
+                <span className={'brand-day-status' + (mobileBrand.isOpen ? ' is-open' : ' is-closed')}>
+                  <span className="brand-day-dot" aria-hidden="true" />
                   {mobileBrand.status}
                 </span>
               </span>
