@@ -7,7 +7,9 @@ import { IconArrow, IconClock, IconMap } from '@/lib/data';
 import { ThemeToggle } from './ThemeToggle';
 import { Socials } from './Socials';
 import { useSettings } from '@/lib/settings';
-import { getCityFromAddress, isStudioOpen } from '@/lib/utils';
+import { getCityFromAddress, isStudioOpen, getMobileBrandStatus } from '@/lib/utils';
+import { getFooterHoursParts } from '@/lib/hours';
+import { VisitHoursBlock } from './HoursText';
 
 const LINKS = [
   { href: '/', label: 'Home' },
@@ -46,11 +48,11 @@ function LocationDropdown({ settings, city, isOpen }) {
             <span className="eyebrow muted">Our Studio</span>
             <span className="loc-status" style={{ color: isOpen ? 'var(--success)' : 'var(--danger)' }}>
               <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
-              {isOpen ? 'Open' : 'Closed'}
+              {isOpen ? 'OPEN' : 'CLOSED'}
             </span>
           </div>
           <div className="loc-addr">{address}</div>
-          <div className="loc-hours">{settings?.hoursText?.split(',')[0] || 'Mon–Sat · 10am–8pm'}</div>
+          <div className="loc-hours"><VisitHoursBlock settings={settings} /></div>
           <a className="loc-directions" href={mapsUrl} target="_blank" rel="noopener noreferrer">
             <IconMap /> Get Directions
           </a>
@@ -74,6 +76,7 @@ export function TopNav() {
   const isActive = (href) => (href === '/' ? pathname === '/' : pathname.startsWith(href));
   const city = settings?.address ? getCityFromAddress(settings.address) : 'Medak';
   const isOpen = isStudioOpen(settings);
+  const mobileBrand = getMobileBrandStatus(settings);
 
   return (
     <>
@@ -94,8 +97,16 @@ export function TopNav() {
           <Link href="/" className="brand">
             {settings.name || 'DM Beauty'}
             <small style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700 }}>
-              {city}
-              <span style={{
+              <span className="brand-city">{city}</span>
+              <span className="brand-day">
+                {mobileBrand.prefix && (
+                  <><span className="brand-day-prefix">{mobileBrand.prefix}</span><span className="brand-day-sep"> · </span></>
+                )}
+                <span className={mobileBrand.isOpen ? 'brand-day-open' : 'brand-day-closed'}>
+                  {mobileBrand.status}
+                </span>
+              </span>
+              <span className="brand-status" style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '3px',
@@ -157,25 +168,7 @@ export function TopNav() {
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 17, fontWeight: 700, letterSpacing: '0.04em', marginBottom: 4 }}>
             <a href={`tel:${(settings.phone || '').replace(/\s+/g, '')}`}>{settings.phone}</a>
           </div>
-          {/* Hours on their own line; open/closed status stacked below so long
-              hours text doesn't wrap awkwardly around the badge on phones */}
-          <div style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.5 }}>
-            {settings.hoursText || 'Mon – Sat · 10am – 8pm'}
-          </div>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            marginTop: 6,
-            fontSize: '11px',
-            fontWeight: 700,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            color: isOpen ? 'var(--success)' : 'var(--danger)'
-          }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
-            {isOpen ? 'Open now' : 'Closed now'}
-          </div>
+          <VisitHoursBlock settings={settings} />
         </div>
       </aside>
     </>
@@ -223,18 +216,33 @@ export function Footer() {
             <p>A studio for everyday beauty rituals and once-in-a-lifetime bridal moments.</p>
             {/* Hours — above social icons: open hours · live status │ closed days */}
             {(() => {
-              const parts = (settings.hoursText || 'Mon–Sat · 10am–8pm, Sun · Closed')
-                .split(',').map((h) => h.trim()).filter(Boolean);
-              const closed = parts.slice(1).filter((p) => /closed/i.test(p)).join(' · ');
+              const { hoursLine, statusLabel, closedParts, rightSide, statusColor } = getFooterHoursParts(settings, isOpen);
               return (
                 <div className="footer-hours-badge">
-                  <IconClock />
-                  <span>{parts[0]}</span>
-                  <span className="fh-live" style={{ color: isOpen ? 'var(--success)' : 'var(--danger)' }}>
-                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'currentColor', display: 'inline-block', flexShrink: 0 }} />
-                    {isOpen ? 'Open' : 'Closed'}
+                  <span className="fh-hours">{hoursLine}</span>
+                  <span className="fh-dot">·</span>
+                  <span className="fh-status" style={{ color: statusColor }}>
+                    {statusLabel}
                   </span>
-                  {closed && <span className="fh-closed">{closed}</span>}
+                  <span className="fh-sep">|</span>
+                  {closedParts.length > 0 ? (
+                    <span className="fh-today">
+                      {closedParts.map((part, i) => {
+                        const [day] = part.split(' · ');
+                        return (
+                          <span key={day}>
+                            {i > 0 && ', '}
+                            {day} · <span className="hours-closed">CLOSED</span>
+                          </span>
+                        );
+                      })}
+                    </span>
+                  ) : (
+                    <span className="fh-today">
+                      {rightSide.split(' · ')[0]} ·{' '}
+                      <span className={isOpen ? 'fh-open' : 'hours-closed'}>{statusLabel}</span>
+                    </span>
+                  )}
                 </div>
               );
             })()}

@@ -5,13 +5,17 @@ import { Packages } from '@/components/Packages';
 import { MapEmbed } from '@/components/MapMockup';
 import { TESTIMONIALS, IconArrow, IconMap, IconPhone, IconClock } from '@/lib/data';
 import { listServices, listGallery, listReviews, listPackages, getStudioSettings } from '@/lib/store';
-import { getCityFromAddress, isStudioOpen } from '@/lib/utils';
+import { getCityFromAddress } from '@/lib/utils';
+import { VisitHoursBlock } from '@/components/HoursText';
 
 export const dynamic = 'force-dynamic';
 
 function Hero({ city }) {
   return (
     <section className="hero">
+      <div className="hero-img-wrap" aria-hidden="true">
+        <img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1600&q=85" alt="" />
+      </div>
       <div className="hero-text">
         <span className="eyebrow">DM Beauty Parlour · {city}, Telangana</span>
         <h1>Quiet luxury,<br /><span className="italic">made for you.</span></h1>
@@ -29,9 +33,6 @@ function Hero({ city }) {
           <div className="num">8 yrs</div>
           <div className="lbl">Crafting Telangana brides</div>
         </div>
-      </div>
-      <div className="hero-img-wrap">
-        <img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1200&q=85" alt="DM Beauty studio" />
       </div>
     </section>
   );
@@ -196,7 +197,6 @@ function ContactPreview({ settings }) {
   const address = settings?.address || '2nd Floor, Above Pochamma Maidan, Medak 502110';
   const phone = settings?.phone || '+91 98765 43210';
   const city = getCityFromAddress(address);
-  const isOpen = isStudioOpen(settings);
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   return (
     <section className="section">
@@ -212,14 +212,13 @@ function ContactPreview({ settings }) {
             </div>
             <div className="info-row visit-row">
               <div className="info-icon"><IconPhone /></div>
-              <div><h4>Reservations</h4><div className="val val-tel"><a href={`tel:${phone.replace(/\s/g, '')}`}>{phone}</a></div></div>
+              <div><h4>Reservations</h4><div className="visit-phone"><a href={`tel:${phone.replace(/\s/g, '')}`}>{phone}</a></div></div>
             </div>
             <div className="info-row visit-row">
               <div className="info-icon"><IconClock /></div>
               <div>
                 <h4>Hours</h4>
-                <div className="val" style={{ fontSize: 14 }}>{settings?.hoursText || 'Mon – Sat · 10am – 8pm'}</div>
-                <div style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: isOpen ? 'var(--success)' : 'var(--danger)' }}>● {isOpen ? 'Open Now' : 'Closed Now'}</div>
+                <VisitHoursBlock settings={settings} />
               </div>
             </div>
             <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>

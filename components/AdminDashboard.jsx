@@ -57,7 +57,16 @@ const IconWalkIn = () => (
 import { enableStudioNotifications, isClientConfigured, getClientDb } from '@/lib/firebaseClient';
 import { useSettings } from '@/lib/settings';
 import { useAppearance } from '@/lib/appearance';
-import { toLocalDateKey, todayLocalKey } from '@/lib/utils';
+import { toLocalDateKey, todayLocalKey, isStudioOpen } from '@/lib/utils';
+import {
+  WEEKDAYS,
+  OPEN_DAY_PRESETS,
+  buildHoursText,
+  formatHoursDisplay,
+  getFooterHoursParts,
+  normalizeDayName,
+  parseOpenDaysFromLegacy,
+} from '@/lib/hours';
 
 // ── Real-time booking hook ────────────────────────────────────
 function useRealtimeBookings() {
@@ -3737,38 +3746,67 @@ function SettingsView({ user }) {
     email: '',
     currency: 'INR · ₹',
     address: '',
-    hoursText: '',
+    openDays: 'Mon - Sat',
     openTime: '10:00',
     closeTime: '20:00',
     closedDays: ['Sunday'],
     instagram: '',
     facebook: ''
   });
+  const [openDaysPreset, setOpenDaysPreset] = React.useState('Mon - Sat');
 
   React.useEffect(() => {
     if (settings) {
+      const openDays = settings.openDays || parseOpenDaysFromLegacy(settings.hoursText) || 'Mon - Sat';
+      const preset = OPEN_DAY_PRESETS.includes(openDays) ? openDays : '__custom__';
+      setOpenDaysPreset(preset);
       setForm({
         name: settings.name || '',
         phone: settings.phone || '',
         email: settings.email || '',
         currency: settings.currency || 'INR · ₹',
         address: settings.address || '',
-        hoursText: settings.hoursText || 'Mon – Sat · 10am – 8pm, Sun · Closed',
+        openDays,
         openTime: settings.openTime || '10:00',
         closeTime: settings.closeTime || '20:00',
-        closedDays: settings.closedDays || ['Sunday'],
+        closedDays: (settings.closedDays || ['Sunday']).map((d) => {
+          const full = normalizeDayName(d);
+          const match = WEEKDAYS.find((w) => normalizeDayName(w.key) === full);
+          return match ? match.key : d;
+        }),
         instagram: settings.instagram || '',
         facebook: settings.facebook || ''
       });
     }
   }, [settings]);
 
+  const toggleClosedDay = (dayKey) => {
+    setForm((f) => {
+      const closed = f.closedDays || [];
+      const next = closed.includes(dayKey)
+        ? closed.filter((d) => d !== dayKey)
+        : [...closed, dayKey];
+      return { ...f, closedDays: next };
+    });
+  };
+
+  const hoursPreview = React.useMemo(() => {
+    const payload = { ...form, hoursText: buildHoursText(form) };
+    const isOpen = isStudioOpen(payload);
+    const footer = getFooterHoursParts(payload, isOpen);
+    return {
+      display: formatHoursDisplay(payload),
+      footer: `${footer.hoursLine} · ${footer.statusLabel} | ${footer.rightSide}`,
+    };
+  }, [form]);
+
   const handleSave = async (e) => {
     e.preventDefault();
     if (busy) return;
     setBusy(true);
     try {
-      await updateSettings(form);
+      const payload = { ...form, hoursText: buildHoursText(form) };
+      await updateSettings(payload);
       toast('Studio settings saved successfully!');
     } catch (err) {
       toast(err.message || 'Failed to save settings', 'error');
@@ -3800,6 +3838,45 @@ function SettingsView({ user }) {
           width: 100%;
           min-width: 0;
           box-sizing: border-box;
+        }
+        .day-chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-top: 8px;
+        }
+        .day-chip {
+          padding: 8px 14px;
+          border-radius: 999px;
+          border: 1px solid var(--line-2);
+          background: transparent;
+          color: var(--muted);
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.15s, color 0.15s, border-color 0.15s;
+        }
+        .day-chip.closed {
+          background: rgba(220, 53, 69, 0.12);
+          border-color: var(--danger);
+          color: var(--danger);
+        }
+        .hours-preview {
+          grid-column: 1 / -1;
+          padding: 14px 16px;
+          border-radius: 12px;
+          border: 1px solid var(--line-2);
+          background: var(--surface-2, rgba(255,255,255,0.03));
+          font-size: 13px;
+          line-height: 1.6;
+        }
+        .hours-preview strong {
+          display: block;
+          font-size: 11px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--muted);
+          margin-bottom: 6px;
         }
         @media (max-width: 640px) {
           .settings-grid { grid-template-columns: 1fr; gap: 20px; }
@@ -3835,21 +3912,63 @@ function SettingsView({ user }) {
           <label>Address</label>
           <input type="text" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
         </div>
-        <div className="field" style={{ gridColumn:'1 / -1' }}>
-          <label>Weekly Hours Text</label>
-          <input type="text" value={form.hoursText} onChange={(e) => setForm({ ...form, hoursText: e.target.value })} placeholder="e.g. Mon – Sat · 10am – 8pm, Sun · Closed" />
+        <div className="field">
+          <label>Opening Days</label>
+          <select
+            value={openDaysPreset}
+            onChange={(e) => {
+              const val = e.target.value;
+              setOpenDaysPreset(val);
+              if (val !== '__custom__') setForm({ ...form, openDays: val });
+            }}
+          >
+            {OPEN_DAY_PRESETS.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+            <option value="__custom__">Custom</option>
+          </select>
+        </div>
+        {openDaysPreset === '__custom__' && (
+          <div className="field">
+            <label>Custom Opening Days</label>
+            <input
+              type="text"
+              value={form.openDays}
+              onChange={(e) => setForm({ ...form, openDays: e.target.value })}
+              placeholder="e.g. Mon - Sun"
+            />
+          </div>
+        )}
+        <div className="field">
+          <label>Open Time (24h)</label>
+          <input type="time" value={form.openTime} onChange={(e) => setForm({ ...form, openTime: e.target.value })} />
         </div>
         <div className="field">
-          <label>Open Time (24h format)</label>
-          <input type="text" value={form.openTime} onChange={(e) => setForm({ ...form, openTime: e.target.value })} placeholder="e.g. 10:00" />
-        </div>
-        <div className="field">
-          <label>Close Time (24h format)</label>
-          <input type="text" value={form.closeTime} onChange={(e) => setForm({ ...form, closeTime: e.target.value })} placeholder="e.g. 20:00" />
+          <label>Close Time (24h)</label>
+          <input type="time" value={form.closeTime} onChange={(e) => setForm({ ...form, closeTime: e.target.value })} />
         </div>
         <div className="field" style={{ gridColumn:'1 / -1' }}>
-          <label>Closed Days (comma-separated)</label>
-          <input type="text" value={form.closedDays.join(', ')} onChange={(e) => setForm({ ...form, closedDays: e.target.value.split(',').map(d => d.trim()).filter(Boolean) })} placeholder="e.g. Sunday" />
+          <label>Closed Days <span style={{ fontWeight:400, color:'var(--muted)' }}>(tap to mark closed)</span></label>
+          <div className="day-chips">
+            {WEEKDAYS.map(({ key, short }) => {
+              const isClosed = (form.closedDays || []).includes(key);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  className={'day-chip' + (isClosed ? ' closed' : '')}
+                  onClick={() => toggleClosedDay(key)}
+                >
+                  {short}{isClosed ? ' · CLOSED' : ''}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        <div className="hours-preview">
+          <strong>Website preview</strong>
+          <div>{hoursPreview.display}</div>
+          <div style={{ marginTop: 6, color: 'var(--muted)' }}>Footer: {hoursPreview.footer}</div>
         </div>
         <div className="field">
           <label>Instagram URL</label>

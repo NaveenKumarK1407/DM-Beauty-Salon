@@ -8,7 +8,8 @@ const DEFAULT_SETTINGS = {
   email: 'hello@dmbeauty.in',
   currency: 'INR · ₹',
   address: '2nd Floor, Above Pochamma Maidan, Medak 502110',
-  hoursText: 'Mon – Sat · 10am – 8pm, Sun · Closed',
+  openDays: 'Mon - Sat',
+  hoursText: 'Mon - Sat · 10 am - 8 pm, Sun · Closed',
   openTime: '10:00',
   closeTime: '20:00',
   closedDays: ['Sunday'],
@@ -45,17 +46,21 @@ export function SettingsProvider({ children, initialSettings = null }) {
   }, [fetchSettings, hasInitial]);
 
   const updateSettings = React.useCallback(async (newSettings) => {
-    // Optimistic update
+    // Optimistic update — site-wide hours/footer/contact refresh immediately
     setSettings(newSettings);
+    invalidateCached('/api/settings');
     const res = await fetch('/api/settings', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newSettings),
     });
     if (!res.ok) {
+      await fetchSettings({ fresh: true });
       throw new Error('Failed to save settings');
     }
-    await fetchSettings({ fresh: true });
+    const data = await res.json();
+    if (data.settings) setSettings(data.settings);
+    else await fetchSettings({ fresh: true });
   }, [fetchSettings]);
 
   const reloadSettings = React.useCallback(() => fetchSettings({ fresh: true }), [fetchSettings]);

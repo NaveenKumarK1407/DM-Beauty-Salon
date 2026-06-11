@@ -5,7 +5,8 @@ import { MapEmbed } from './MapMockup';
 import { IconArrow, IconMap, IconPhone, IconWa, IconMail, IconClock, IconCheck } from '@/lib/data';
 import { Socials } from './Socials';
 import { useSettings } from '@/lib/settings';
-import { getCityFromAddress, isStudioOpen } from '@/lib/utils';
+import { getCityFromAddress } from '@/lib/utils';
+import { VisitHoursBlock } from './HoursText';
 
 export function ContactView() {
   const [sent, setSent] = React.useState(false);
@@ -14,7 +15,6 @@ export function ContactView() {
   const [form, setForm] = React.useState({ name: '', email: '', service: 'General enquiry', message: '' });
   const { settings } = useSettings();
   const city = settings?.address ? getCityFromAddress(settings.address) : 'Medak';
-  const isOpen = isStudioOpen(settings);
   const update = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
   const submit = async (e) => {
@@ -140,14 +140,13 @@ export function ContactView() {
               </div>
               <div className="info-row visit-row">
                 <div className="info-icon"><IconPhone /></div>
-                <div><h4>Reservations</h4><div className="val val-tel"><a href={`tel:${(settings.phone || '').replace(/\s/g, '')}`}>{settings.phone}</a></div></div>
+                <div><h4>Reservations</h4><div className="visit-phone"><a href={`tel:${(settings.phone || '').replace(/\s/g, '')}`}>{settings.phone}</a></div></div>
               </div>
               <div className="info-row visit-row">
                 <div className="info-icon"><IconClock /></div>
                 <div>
                   <h4>Hours</h4>
-                  <div className="val" style={{ fontSize: 14 }}>{settings.hoursText || 'Mon – Sat · 10am – 8pm'}</div>
-                  <div style={{ fontSize: 12, marginTop: 4, fontWeight: 600, color: isOpen ? 'var(--success)' : 'var(--danger)' }}>● {isOpen ? 'Open now' : 'Closed now'}</div>
+                  <VisitHoursBlock settings={settings} />
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
