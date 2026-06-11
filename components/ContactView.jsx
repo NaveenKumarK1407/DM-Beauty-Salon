@@ -68,7 +68,7 @@ export function ContactView() {
                 <div>
                   <h4>Email</h4>
                   <div className="val val-tel"><a href={`mailto:${settings.email}`}>{settings.email}</a></div>
-                  <div className="sub">bridal@dmbeauty.in · for wedding enquiries</div>
+                  <div className="sub">dmbeauty.medak@gmail.com · for wedding enquiries</div>
                 </div>
               </div>
 

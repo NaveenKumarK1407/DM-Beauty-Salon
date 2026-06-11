@@ -57,6 +57,7 @@ const IconWalkIn = () => (
 import { enableStudioNotifications, isClientConfigured, getClientDb } from '@/lib/firebaseClient';
 import { useSettings } from '@/lib/settings';
 import { useAppearance } from '@/lib/appearance';
+import { toLocalDateKey, todayLocalKey } from '@/lib/utils';
 
 // ── Real-time booking hook ────────────────────────────────────
 function useRealtimeBookings() {
@@ -1395,7 +1396,7 @@ function CustomersView({ bookings, loading, setTab }) {
   const handleOpenEditModal = (booking, customerName) => {
     setEditingBooking(booking);
     setEditingCustomerName(customerName);
-    setEditDate(booking.date || '');
+    setEditDate(toLocalDateKey(booking.date) || '');
     setEditSlot(booking.time || '');
   };
 
@@ -1453,7 +1454,7 @@ function CustomersView({ bookings, loading, setTab }) {
     }
   };
 
-  const todayStr = new Date().toDateString();
+  const todayKey = todayLocalKey();
   const customersMap = {};
 
   (bookings || []).forEach((b) => {
@@ -1473,21 +1474,22 @@ function CustomersView({ bookings, loading, setTab }) {
 
   const customersList = React.useMemo(() => {
     return Object.values(customersMap).map((c) => {
-      // Find if they have a booking today
-      const hasBookingToday = c.bookings.some(b => b.date && new Date(b.date).toDateString() === todayStr && b.status !== 'cancelled');
-      
-      // Sort active bookings to find latest/upcoming one
-      const activeBookings = c.bookings.filter(b => b.status !== 'cancelled');
-      activeBookings.sort((a, b) => {
-        const da = a.date ? new Date(a.date) : new Date(0);
-        const db = b.date ? new Date(b.date) : new Date(0);
-        return db - da; // newest first
-      });
+      const activeBookings = c.bookings.filter((b) => b.status !== 'cancelled');
 
-      const now = new Date();
-      now.setHours(0,0,0,0);
-      const upcoming = activeBookings.find(b => b.date && new Date(b.date) >= now);
-      const primaryBooking = upcoming || activeBookings[0] || null;
+      const hasBookingToday = activeBookings.some(
+        (b) => b.date && toLocalDateKey(b.date) === todayKey
+      );
+
+      const todayBooking = activeBookings.find(
+        (b) => b.date && toLocalDateKey(b.date) === todayKey
+      );
+      const upcomingBookings = activeBookings
+        .filter((b) => b.date && toLocalDateKey(b.date) >= todayKey)
+        .sort((a, b) => toLocalDateKey(a.date).localeCompare(toLocalDateKey(b.date)));
+      const primaryBooking = todayBooking || upcomingBookings[0] || activeBookings[0] || null;
+      const primaryIsToday = !!(
+        primaryBooking?.date && toLocalDateKey(primaryBooking.date) === todayKey
+      );
 
       // Get favorite/most booked service
       const serviceCounts = {};
@@ -1501,16 +1503,24 @@ function CustomersView({ bookings, loading, setTab }) {
       const visits = activeBookings.length;
       const spent = activeBookings.reduce((sum, b) => sum + Number(b.price || 0), 0);
 
-      // Get human-readable last visit string
       let lastVisitStr = '—';
-      const lastActive = activeBookings[0];
-      if (lastActive && lastActive.date) {
-        const d = new Date(lastActive.date);
-        const diffDays = Math.floor((new Date().setHours(0,0,0,0) - d.setHours(0,0,0,0)) / (1000 * 60 * 60 * 24));
-        if (diffDays <= 0) lastVisitStr = 'In today';
-        else if (diffDays === 1) lastVisitStr = 'Last · Yesterday';
-        else lastVisitStr = `Last · ${diffDays} days ago`;
+      const pastBookings = activeBookings
+        .filter((b) => b.date && toLocalDateKey(b.date) < todayKey)
+        .sort((a, b) => toLocalDateKey(b.date).localeCompare(toLocalDateKey(a.date)));
+      const lastPast = pastBookings[0];
+      if (lastPast?.date) {
+        const lastKey = toLocalDateKey(lastPast.date);
+        const [y, m, d] = todayKey.split('-').map(Number);
+        const [ly, lm, ld] = lastKey.split('-').map(Number);
+        const todayUtc = Date.UTC(y, m - 1, d);
+        const lastUtc = Date.UTC(ly, lm - 1, ld);
+        const diffDays = Math.round((todayUtc - lastUtc) / (1000 * 60 * 60 * 24));
+        if (diffDays === 1) lastVisitStr = 'Last · Yesterday';
+        else if (diffDays > 1) lastVisitStr = `Last · ${diffDays} days ago`;
       }
+
+      const primaryKey = primaryBooking?.date ? toLocalDateKey(primaryBooking.date) : '';
+      const hasUpcoming = primaryKey && primaryKey > todayKey;
 
       return {
         name: c.name,
@@ -1521,12 +1531,13 @@ function CustomersView({ bookings, loading, setTab }) {
         visits,
         spent,
         hasBookingToday,
+        primaryIsToday,
         lastVisitStr,
         isRegular: visits >= 3,
-        upcomingDate: upcoming?.date ? new Date(upcoming.date) : null
+        hasUpcoming,
       };
     });
-  }, [bookings]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [bookings, todayKey]);
 
   // Stats calculation
   const totalCustomers = customersList.length;
@@ -1789,10 +1800,10 @@ function CustomersView({ bookings, loading, setTab }) {
                   <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 10, fontWeight: 600, letterSpacing: '0.05em' }}>
                     <span style={{
                       width: 6, height: 6, borderRadius: '50%',
-                      background: c.hasBookingToday ? '#3a7d44' : c.upcomingDate ? 'var(--gold)' : 'var(--muted)'
+                      background: c.primaryIsToday ? '#3a7d44' : c.hasUpcoming ? 'var(--gold)' : 'var(--muted)'
                     }} />
-                    <span style={{ color: c.hasBookingToday ? '#3a7d44' : c.upcomingDate ? 'var(--gold-deep)' : 'var(--muted)', textTransform: 'uppercase' }}>
-                      {c.hasBookingToday ? 'Visiting Today' : c.upcomingDate ? 'Upcoming Appt' : c.lastVisitStr}
+                    <span style={{ color: c.primaryIsToday ? '#3a7d44' : c.hasUpcoming ? 'var(--gold-deep)' : 'var(--muted)', textTransform: 'uppercase' }}>
+                      {c.primaryIsToday ? 'Visiting Today' : c.hasUpcoming ? 'Upcoming Appt' : c.lastVisitStr}
                     </span>
                   </div>
 
