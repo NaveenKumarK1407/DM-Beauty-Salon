@@ -6,8 +6,9 @@ import { getCityFromAddress } from '@/lib/utils';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://dmbeauty.in';
 
 export async function generateMetadata() {
-  const settings = await getStudioSettings();
-  const address = settings?.address || '2nd Floor, Above Pochamma Maidan, Medak 502110';
+  const settingsMeta = await getStudioSettings();
+  const settings = settingsMeta || {};
+  const address = settings.address || '2nd Floor, Above Pochamma Maidan, Medak 502110';
   const city = getCityFromAddress(address);
 
   return {
@@ -63,10 +64,11 @@ export const viewport = {
 };
 
 export default async function RootLayout({ children }) {
-  const settings = await getStudioSettings();
-  const address = settings?.address || '2nd Floor, Above Pochamma Maidan, Medak 502110';
-  const phone = settings?.phone || '+91 98765 43210';
-  const email = settings?.email || 'hello@dmbeauty.in';
+  const settingsRaw = await getStudioSettings();
+  const settings = settingsRaw || {};
+  const address = settings.address || '2nd Floor, Above Pochamma Maidan, Medak 502110';
+  const phone = settings.phone || '+91 98765 43210';
+  const email = settings.email || 'hello@dmbeauty.in';
   const city = getCityFromAddress(address);
 
   // Parse address for JSON-LD schema
