@@ -1,11 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+
+  // Required for Vercel serverless — fixes "clientModules" crash at runtime.
+  // Firebase Admin SDK must be treated as an external (not bundled) package.
+  serverExternalPackages: ['firebase-admin'],
+
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
+
   webpack: (config, { dev }) => {
     // Next.js 14's persistent webpack cache races on Windows and throws
     // ENOENT on *.pack.gz, which crashes `next dev` via unhandledRejection.
@@ -18,3 +24,4 @@ const nextConfig = {
 };
 
 export default nextConfig;
+
