@@ -1,0 +1,15 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "apphosting": {
+    "backendId": "dm-beauty",
+    "rootDir": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      ".data/**"
+    ]
+  }
+}

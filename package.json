@@ -7,7 +7,11 @@
         "dev": "next dev --turbo",
         "build": "next build",
         "start": "next start",
-        "lint": "next lint"
+        "lint": "next lint",
+        "deploy:firebase": "firebase deploy --only apphosting,firestore:rules"
+    },
+    "engines": {
+        "node": ">=20"
     },
     "dependencies": {
         "next": "^14.2.15",

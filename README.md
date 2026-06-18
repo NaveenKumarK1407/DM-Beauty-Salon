@@ -38,6 +38,47 @@ npm run dev                  # http://localhost:3000
 
 `npm run build && npm start` for production.
 
+## Deploy to Firebase App Hosting
+
+The site uses **Firebase App Hosting** (not static Hosting) so Next.js SSR and `/api/*` routes work.
+
+### One-time setup
+
+1. **Firebase project** — We host the frontend website on `dm-beauty-salon` (under your `naveenkusangi14@gmail.com` account) and connect it to the database/backend on `dm-beauty-medak` (under `dmbeauty.medak@gmail.com`).
+2. **Create backend** — In [Firebase Console](https://console.firebase.google.com/) for **dm-beauty-salon** → **Hosting & Serverless** → **App Hosting** → **Create backend**:
+   - Root directory: `/`
+   - Live branch: `main`
+   - Backend name: `dm-beauty` (must match `firebase.json`)
+   - Connect GitHub repo: `saikumarkusangi/DM-Beauty-Salon-`
+3. **Environment variables** — Go to your App Hosting backend → **Settings** → **Environment** → paste your `.env.local` contents (which should contain the client/server keys for the `dm-beauty-medak` backend database).
+4. **Secrets** (recommended for the private key) — run these from the project root using the hosting project:
+
+```bash
+# Set secrets for your hosting project (e.g. dm-beauty-salon)
+firebase apphosting:secrets:set FIREBASE_CLIENT_EMAIL --project dm-beauty-salon
+firebase apphosting:secrets:set FIREBASE_PRIVATE_KEY --project dm-beauty-salon
+```
+
+5. **Firestore rules** — deploy these to your database project:
+   ```bash
+   firebase deploy --only firestore:rules --project dm-beauty-medak
+   ```
+6. After the first deploy, set `NEXT_PUBLIC_SITE_URL` to your live URL (`https://dm-beauty-salon.web.app` or your custom domain).
+
+### Deploy
+
+**Option A — GitHub (recommended):** push to `main`; App Hosting rolls out automatically.
+
+**Option B — CLI from your machine:**
+
+```bash
+npm run deploy:firebase
+```
+
+### Custom domain (after you buy one)
+
+App Hosting → your backend → **Settings** → **Domains** → **Add custom domain**, then add the DNS records at your registrar.
+
 ## Firebase setup (for real notifications)
 
 1. Create a Firebase project and a **Web app**; copy the config into the

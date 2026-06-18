@@ -24,3 +24,4 @@ firebase-service-account*.json
 
 # extracted design handoff bundle (reference only)
 _design
+.vercel
