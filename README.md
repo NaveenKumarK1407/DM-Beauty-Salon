@@ -198,4 +198,7 @@ MIT © [Naveen Kumar K](https://github.com/NaveenKumarK1407)
 
 <div align="center">
   Made with ❤️ for DM Beauty Parlour, Medak — Telangana
+
+  [![GitHub](https://img.shields.io/badge/GitHub-NaveenKumarK1407-black?logo=github)](https://github.com/NaveenKumarK1407)
+  [![LinkedIn](https://img.shields.io/badge/LinkedIn-Naveen%20Kumar-blue?logo=linkedin)](https://www.linkedin.com/in/naveen-kumar-kusangi-721b5826b/)
 </div>
