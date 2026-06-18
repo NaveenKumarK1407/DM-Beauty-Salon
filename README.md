@@ -192,7 +192,7 @@ Pull requests are welcome! For major changes, please open an issue first.
 
 ## 📄 License
 
-MIT © [Naveen Kumar K](https://github.com/NaveenKumarK1407)
+MIT © [Naveen Kumar K]([https://github.com/NaveenKumarK1407](https://www.linkedin.com/in/naveen-kumar-kusangi-721b5826b/))
 
 ---
 
