@@ -152,6 +152,61 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
   box-shadow: var(--shadow-2);
 }
 .nav-links { display: flex; gap: 36px; align-items: center; justify-self: start; }
+.nav-start {
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  gap: 20px;
+}
+.footer-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: inherit;
+}
+.footer-logo {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mm-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  flex: 1;
+  min-width: 0;
+}
+.mm-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.nav-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
+}
+.nav-logo img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+@media (min-width: 1025px) {
+  .nav-logo img {
+    width: 52px;
+    height: 52px;
+  }
+}
 .nav-link {
   font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase;
   font-weight: 500; color: var(--ink-2);
@@ -175,6 +230,13 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
   display: block; font-family: var(--font-body); font-size: 9px;
   letter-spacing: 0.35em; color: var(--muted); margin-top: 2px;
   text-transform: uppercase;
+}
+.brand-sub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 700;
 }
 .brand-day { display: none; }
 .nav-actions { display: flex; gap: 12px; justify-self: end; align-items: center; }
@@ -229,7 +291,7 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
   color: var(--ink);
   border-radius: 50%;
   transition: background 0.2s ease;
-  justify-self: start;
+  flex-shrink: 0;
 }
 .nav-burger:hover { background: var(--bg-soft); }
 .book-label-long { display: inline; }
@@ -811,7 +873,24 @@ a.map:hover {
 .footer ul li { cursor: pointer; transition: color 0.2s ease; }
 .footer ul li:hover { color: var(--gold); }
 .footer ul li a.active { color: var(--gold); font-weight: 500; }
-.footer-bot { padding-top: 8px; display: flex; justify-content: center; text-align: center; font-size: 10px; letter-spacing: 0.1em; opacity: 0.7; }
+.footer-bot {
+  padding-top: 8px;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--inverse-muted);
+}
+.footer-credit-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  text-decoration: none;
+}
+.footer-credit-name:hover { color: var(--gold-tint); }
 .socials { display: flex; gap: 14px; }
 .social-btn { width: 38px; height: 38px; border: 1px solid; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
 /* Brand-colored social buttons — official colors, white glyphs */
@@ -1151,6 +1230,9 @@ a.map:hover {
 :root[data-theme="dark"] .footer p { color: var(--muted); }
 :root[data-theme="dark"] .footer-grid { border-bottom-color: var(--line); }
 :root[data-theme="dark"] .footer ul li:hover { color: var(--gold); }
+:root[data-theme="dark"] .footer-bot { color: var(--muted); }
+:root[data-theme="dark"] .footer-credit-name { color: var(--ink); }
+:root[data-theme="dark"] .footer-credit-name:hover { color: var(--gold-deep); }
 :root[data-theme="dark"] .social-btn { border-color: var(--line-2); color: var(--muted); }
 :root[data-theme="dark"] .social-btn:hover { border-color: var(--gold); color: var(--gold); }
 
@@ -1236,9 +1318,20 @@ a.map:hover {
   .admin-shell { grid-template-columns: 220px minmax(0, 1fr); }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .nav-links { display: none; }
+  .nav-logo img {
+    width: 64px;
+    height: 64px;
+  }
   .nav-burger { display: flex; }
-  .nav-inner { grid-template-columns: auto 1fr auto; }
+  .nav-book-btn { display: none !important; }
+  .nav-inner {
+    grid-template-columns: auto 1fr auto;
+    padding: 6px 16px 6px 10px;
+    gap: 6px;
+    align-items: center;
+  }
   .brand { text-align: center; justify-self: center; }
+  .brand small { margin-top: 0; line-height: 1.15; }
   .footer-grid { grid-template-columns: 1.4fr 1fr 1fr; }
   .booking-body { padding: 36px 32px; }
   .stepper { grid-template-columns: 1fr 1fr; }
@@ -1455,8 +1548,10 @@ a.map:hover {
   .nav-inner {
     max-width: none;
     margin: 0;
-    padding: 12px 14px 12px 8px;
-    gap: 8px;
+    padding: 0 10px 0 6px;
+    gap: 6px;
+    align-items: center;
+    min-height: 72px;
     border-radius: 0;
     border-left: 0;
     border-right: 0;
@@ -1467,25 +1562,42 @@ a.map:hover {
     border-radius: 0;
   }
   .nav-burger {
-    width: 38px;
-    height: 38px;
-    margin-left: -4px;
+    width: 36px;
+    height: 36px;
+    margin-left: 0;
+    margin-right: -2px;
     padding: 0;
+    align-self: center;
   }
   .nav-burger svg {
     width: 24px;
     height: 24px;
     stroke-width: 2.6;
   }
-  .brand { font-size: 18px; white-space: nowrap; }
-  .brand small { font-size: 8px; letter-spacing: 0.22em; }
+  .nav-logo img {
+    width: 72px;
+    height: 72px;
+    display: block;
+  }
+  .nav-start { align-self: stretch; align-items: center; }
+  .nav-inner .brand {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    height: 72px;
+    padding: 4px 0;
+  }
+  .brand { font-size: 18px; white-space: nowrap; line-height: 1; }
+  .brand small { font-size: 8px; letter-spacing: 0.22em; margin-top: 0; line-height: 1; }
   .nav-inner .brand-city { display: none; }
   .nav-inner .brand-status { display: none !important; }
   .nav-inner .brand-day {
     display: inline-flex;
     align-items: center;
     flex-wrap: nowrap;
-    gap: 12px;
+    gap: 6px;
     font-size: 8px;
     font-weight: 700;
     letter-spacing: 0.14em;
@@ -1493,6 +1605,11 @@ a.map:hover {
   }
   .nav-inner .brand-day-prefix {
     color: #ffffff;
+  }
+  .nav-inner .brand-day-sep {
+    color: var(--muted);
+    font-weight: 700;
+    opacity: 0.85;
   }
   .nav-inner .brand-day-status {
     display: inline-flex;
@@ -1503,6 +1620,9 @@ a.map:hover {
     letter-spacing: 0.14em;
     text-transform: uppercase;
     white-space: nowrap;
+  }
+  .nav-inner .brand-day-status .brand-day-dot {
+    display: none;
   }
   .nav-inner .brand-day-dot {
     width: 5px;
@@ -1517,15 +1637,10 @@ a.map:hover {
   .nav-inner .brand-day-status.is-closed {
     color: var(--status-closed);
   }
-  .nav-actions .btn {
-    padding: 15px 24px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    min-height: 48px;
+  .footer-credit-name {
+    font-size: 16px;
+    font-weight: 700;
   }
-  .book-label-long { display: none; }
-  .book-label-short { display: inline; }
   .testi { padding: 28px 22px; }
   .testi .quote { font-size: 18px; }
   .about-two .body { padding: 0; }

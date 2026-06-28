@@ -35,8 +35,8 @@ messaging.onBackgroundMessage((payload) => {
   const n = payload.notification || {};
   self.registration.showNotification(n.title || 'DM Beauty', {
     body:  n.body  || '',
-    icon:  '/icon-192.png',
-    badge: '/icon-192.png',
+    icon:  '/dm_logo.png',
+    badge: '/dm_logo.png',
     data:  payload.data || {},
   });
 });

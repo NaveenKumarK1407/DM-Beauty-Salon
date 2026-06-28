@@ -2,6 +2,7 @@
 // Top nav + mobile drawer + Marquee + Footer, adapted for Next.js routing.
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { IconArrow, IconClock, IconMap } from '@/lib/data';
 import { ThemeToggle } from './ThemeToggle';
@@ -82,25 +83,28 @@ export function TopNav() {
     <>
       <header className="nav">
         <div className="nav-inner">
-          <button className="nav-burger" onClick={() => setOpen((o) => !o)} aria-label="Open menu">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
-              <path d="M4 7h16M4 12h16M4 17h16" />
-            </svg>
-          </button>
-          <nav className="nav-links">
-            {LINKS.map((l) => (
-              <Link key={l.href} href={l.href} className={'nav-link ' + (isActive(l.href) ? 'active' : '')}>
-                {l.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="nav-start">
+            <Link href="/" className="nav-logo" aria-label="DM Beauty Parlour home">
+              <Image src="/dm_logo.png" alt="" width={72} height={72} priority />
+            </Link>
+            <nav className="nav-links">
+              {LINKS.map((l) => (
+                <Link key={l.href} href={l.href} className={'nav-link ' + (isActive(l.href) ? 'active' : '')}>
+                  {l.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
           <Link href="/" className="brand">
             {settings.name || 'DM Beauty'}
-            <small style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 700 }}>
+            <small className="brand-sub">
               <span className="brand-city">{city}</span>
               <span className="brand-day">
                 {mobileBrand.prefix && (
-                  <span className="brand-day-prefix">{mobileBrand.prefix}</span>
+                  <>
+                    <span className="brand-day-prefix">{mobileBrand.prefix}</span>
+                    <span className="brand-day-sep" aria-hidden="true">·</span>
+                  </>
                 )}
                 <span className={'brand-day-status' + (mobileBrand.isOpen ? ' is-open' : ' is-closed')}>
                   <span className="brand-day-dot" aria-hidden="true" />
@@ -123,34 +127,42 @@ export function TopNav() {
           <div className="nav-actions">
             <LocationDropdown settings={settings} city={city} isOpen={isOpen} />
             <ThemeToggle className="desktop-only" />
-            <Link href="/booking" className="btn btn-primary">
+            <Link href="/booking" className="btn btn-primary nav-book-btn">
               <span className="book-label-long">Book Now</span>
               <span className="book-label-short">Book</span>
               <span className="desktop-only" style={{ display: 'inline-flex' }}><IconArrow size={12} /></span>
             </Link>
+            <button className="nav-burger" onClick={() => setOpen((o) => !o)} aria-label="Open menu">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                <path d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            </button>
           </div>
         </div>
       </header>
       {open && <div className="mobile-overlay" onClick={() => setOpen(false)} />}
       <aside className={'mobile-menu ' + (open ? 'open' : '')}>
         <div className="mm-head">
-          <div className="brand" style={{ textAlign: 'left' }}>
-            {settings.name || 'DM Beauty'}
-            <small style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              {city} ·
-              <span style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '3px',
-                color: isOpen ? 'var(--success)' : 'var(--danger)',
-                fontWeight: 700,
-                fontSize: '8px'
-              }}>
-                <span style={{ width: 4, height: 4, borderRadius: '50%', background: isOpen ? 'var(--success)' : 'var(--danger)' }} />
-                {isOpen ? 'OPEN' : 'CLOSED'}
-              </span>
-            </small>
-          </div>
+          <Link href="/" className="mm-brand-row" onClick={() => setOpen(false)}>
+            <Image src="/dm_logo.png" alt="" width={44} height={44} className="mm-logo" />
+            <div className="brand" style={{ textAlign: 'left' }}>
+              {settings.name || 'DM Beauty'}
+              <small style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {city} ·
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  color: isOpen ? 'var(--success)' : 'var(--danger)',
+                  fontWeight: 700,
+                  fontSize: '8px'
+                }}>
+                  <span style={{ width: 4, height: 4, borderRadius: '50%', background: isOpen ? 'var(--success)' : 'var(--danger)' }} />
+                  {isOpen ? 'OPEN' : 'CLOSED'}
+                </span>
+              </small>
+            </div>
+          </Link>
           <button onClick={() => setOpen(false)} style={{ fontSize: 24, color: 'var(--muted)' }}>✕</button>
         </div>
         <nav className="mm-links">
@@ -213,7 +225,10 @@ export function Footer() {
       <div className="container">
         <div className="footer-grid">
           <div className="footer-brand-col">
-            <div className="brand">{settings.name || 'DM Beauty'}<small>Est. 2022</small></div>
+            <Link href="/" className="footer-brand-row">
+              <Image src="/dm_logo.png" alt="" width={52} height={52} className="footer-logo" />
+              <div className="brand">{settings.name || 'DM Beauty'}<small>Est. 2022</small></div>
+            </Link>
             <p>A studio for everyday beauty rituals and once-in-a-lifetime bridal moments.</p>
             {/* Hours — above social icons: open hours · live status │ closed days */}
             {(() => {
@@ -282,7 +297,7 @@ export function Footer() {
               href="https://in.linkedin.com/in/naveen-kumar-kusangi-721b5826b"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: 'var(--gold)', textDecoration: 'none' }}
+              className="footer-credit-name"
             >
               Naveen Kusangi
             </a>

@@ -2,9 +2,9 @@
 const nextConfig = {
   reactStrictMode: true,
 
-  // Required for Vercel serverless — fixes "clientModules" crash at runtime.
-  // Firebase Admin SDK must be treated as an external (not bundled) package.
-  serverExternalPackages: ['firebase-admin'],
+  experimental: {
+    serverComponentsExternalPackages: ['firebase-admin'],
+  },
 
   images: {
     remotePatterns: [
