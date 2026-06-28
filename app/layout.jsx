@@ -55,9 +55,12 @@ export async function generateMetadata() {
     },
     robots: { index: true, follow: true },
     icons: {
-      icon: [{ url: '/dm_logo.png', type: 'image/png' }],
-      apple: [{ url: '/dm_logo.png', type: 'image/png' }],
-      shortcut: ['/dm_logo.png'],
+      icon: [
+        { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+      ],
+      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+      shortcut: ['/icon-192.png'],
     },
   };
 }
@@ -127,8 +130,8 @@ export default async function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Jost:wght@300;400;500;600&family=Italiana&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap"
           rel="stylesheet"
         />
-        <link rel="icon" href="/dm_logo.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/dm_logo.png" />
+        <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

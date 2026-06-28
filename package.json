@@ -8,6 +8,7 @@
         "build": "next build",
         "start": "next start",
         "lint": "next lint",
+        "icons": "node scripts/generate-icons.mjs",
         "deploy:firebase": "firebase deploy --only apphosting,firestore:rules"
     },
     "engines": {
@@ -19,5 +20,8 @@
         "react-dom": "^18.3.1",
         "firebase": "^10.14.1",
         "firebase-admin": "^12.7.0"
+    },
+    "devDependencies": {
+        "sharp": "^0.34.5"
     }
 }
