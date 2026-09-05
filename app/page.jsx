@@ -7,6 +7,8 @@ import { TESTIMONIALS, IconArrow, IconMap, IconPhone, IconClock } from '@/lib/da
 import { listServices, listGallery, listReviews, listPackages, getStudioSettings } from '@/lib/store';
 import { getCityFromAddress } from '@/lib/utils';
 import { VisitHoursBlock } from '@/components/HoursText';
+import { HomepagePopup } from '@/components/HomepagePopup';
+import { getHomepagePromotion } from '@/lib/store';
 
 export const dynamic = 'force-dynamic';
 
@@ -238,17 +240,19 @@ function ContactPreview({ settings }) {
 }
 
 export default async function HomePage() {
-  const [services, gallery, reviews, packages, settings] = await Promise.all([
+  const [services, gallery, reviews, packages, settings, promotion] = await Promise.all([
     listServices(),
     listGallery(),
     listReviews(),
     listPackages(),
     getStudioSettings(),
+    getHomepagePromotion().catch(() => null),
   ]);
   const city = getCityFromAddress(settings?.address);
 
   return (
     <div className="fade-in">
+      <HomepagePopup key={promotion?.updatedAt || 'no-promotion'} promotion={promotion?.enabled ? promotion : null} />
       <Hero city={city} />
       <Marquee />
       <FeaturedServices services={services} />

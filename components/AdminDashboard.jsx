@@ -5,6 +5,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { ThemeToggle } from './ThemeToggle';
+import { PromotionPanel } from './PromotionPanel';
 import {
   SERVICES, GALLERY,
   IconGrid, IconCalendar, IconUser, IconPackage, IconImage,
@@ -515,6 +516,7 @@ function AdminSidebar({ user, onSignOut, tab, setTab, bookings, rawBookings, rou
         <NavItem icon={<IconChart />}    label="Analytics"    active={tab==='analytics'} onClick={() => setTab('analytics')} />
         <NavItem icon={<IconMsg />}      label="Messages"     active={tab==='messages'}  onClick={() => setTab('messages')}
           badge={messagesNew === null ? '' : String(messagesNew || '')} />
+        <NavItem icon={<IconImage />} label="Homepage Popup" active={tab==='promotion'} onClick={() => setTab('promotion')} />
         <NavItem icon={<IconSettings />} label="Settings"     active={tab==='settings'}  onClick={() => setTab('settings')} />
       </nav>
     </aside>
@@ -670,7 +672,7 @@ export function AdminDashboard({ user, onSignOut }) {
 
         <header className="admin-head">
           <div>
-            <h1>{{ dashboard:'Dashboard', appts:'Appointments', customers:'Customers', messages:'Messages', services:'Services', walkin:'Walk-in Cash', packages:'Packages', gallery:'Gallery', analytics:'Analytics', settings:'Settings' }[tab]}</h1>
+            <h1>{{ dashboard:'Dashboard', appts:'Appointments', customers:'Customers', messages:'Messages', services:'Services', walkin:'Walk-in Cash', packages:'Packages', gallery:'Gallery', analytics:'Analytics', settings:'Settings', promotion:'Homepage Popup' }[tab]}</h1>
             <div className="sub">
               {new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}
               {' · '}
@@ -720,6 +722,7 @@ export function AdminDashboard({ user, onSignOut }) {
         {tab === 'reviews'    && <ReviewsAdminView reviews={reviews} loading={reviews===null} onRefresh={fetchReviews} />}
         {tab === 'analytics'  && <AnalyticsView bookings={bookings} payments={rawPayments} />}
         {tab === 'settings'   && <SettingsView user={user} />}
+        {tab === 'promotion'  && <PromotionPanel user={user} />}
       </main>
     </div>
     </SnackbarProvider>
