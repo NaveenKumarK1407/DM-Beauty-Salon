@@ -4,7 +4,7 @@ import { getStudioSettings } from '@/lib/store';
 import { getCityFromAddress } from '@/lib/utils';
 import { MEDAK_GEO, MEDAK_AREAS } from '@/lib/localSeo';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://dmbeauty.in';
+import { SITE_URL, DEFAULT_EMAIL } from '@/lib/siteUrl';
 
 export async function generateMetadata() {
   const settingsMeta = await getStudioSettings();
@@ -17,7 +17,7 @@ export async function generateMetadata() {
     // Title leads with the exact phrase people type ("beauty parlour in Medak")
     // and keeps the brand at the end, where it still reads naturally in the SERP.
     title: {
-      default: `Beauty Parlour in ${city} | Bridal Makeup & Beauty Salon`,
+      default: `Beauty Salon in ${city} | DM Beauty Parlour`,
       template: `%s · DM Beauty Parlour ${city}`,
       // absolute-title pages (the local landing page) opt out of the template
       // above so the brand is not appended twice.
@@ -57,7 +57,7 @@ export async function generateMetadata() {
           url: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1200&q=85',
           width: 1200,
           height: 630,
-          alt: 'DM Beauty Parlour studio',
+          alt: 'Beauty and makeup inspiration',
         },
       ],
     },
@@ -89,7 +89,7 @@ export default async function RootLayout({ children }) {
   const settings = settingsRaw || {};
   const address = settings.address || '2nd Floor, Above Pochamma Maidan, Medak 502110';
   const phone = settings.phone || '+91 98765 43210';
-  const email = settings.email || 'hello@dmbeauty.in';
+  const email = settings.email || DEFAULT_EMAIL;
   const city = getCityFromAddress(address);
 
   // Parse address for JSON-LD schema

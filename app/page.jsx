@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { Marquee } from '@/components/Nav';
 import { Packages } from '@/components/Packages';
 import { MapEmbed } from '@/components/MapMockup';
-import { TESTIMONIALS, IconArrow, IconMap, IconPhone, IconClock } from '@/lib/data';
+import { IconArrow, IconMap, IconPhone, IconClock } from '@/lib/data';
 import { listServices, listGallery, listReviews, listPackages, getStudioSettings } from '@/lib/store';
 import { getCityFromAddress } from '@/lib/utils';
 import { VisitHoursBlock } from '@/components/HoursText';
@@ -20,7 +20,7 @@ function Hero({ city }) {
       </div>
       <div className="hero-text">
         <span className="eyebrow">DM Beauty Parlour · {city}, Telangana</span>
-        <h1>Quiet luxury,<br /><span className="italic">made for you.</span></h1>
+        <h1>Beauty salon<br /><span className="italic">in {city}.</span></h1>
         <p style={{ maxWidth: 480, fontSize: 17, lineHeight: 1.6 }}>
           From a soft Sunday facial to the morning you become a bride — DM Beauty is a small, considered studio for everyday rituals and once-in-a-lifetime looks.
         </p>
@@ -32,8 +32,8 @@ function Hero({ city }) {
           <span>Bridal · Skin · Hair · Nails</span>
         </div>
         <div className="hero-tag">
-          <div className="num">8 yrs</div>
-          <div className="lbl">Crafting Telangana brides</div>
+          <div className="num">Bridal</div>
+          <div className="lbl">Explore our makeup services</div>
         </div>
       </div>
     </section>
@@ -82,7 +82,7 @@ function AboutStrip({ city }) {
       <div className="container">
         <div className="about-two">
           <div className="img">
-            <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=900&q=85" alt="Inside the studio" />
+            <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=900&q=85" alt="Salon interior inspiration" loading="lazy" />
           </div>
           <div className="body">
             <h2>A second home for women who care about how they feel.</h2>
@@ -137,7 +137,7 @@ function GalleryPreview({ gallery }) {
       <div className="container">
         <div className="section-head">
           <span className="eyebrow">Recent Work</span>
-          <h2 style={{ color: 'var(--bg-soft)' }}>Six years of brides,<br /><span className="italic" style={{ color: 'var(--gold-tint)' }}>captured.</span></h2>
+          <h2 style={{ color: 'var(--bg-soft)' }}>Explore our<br /><span className="italic" style={{ color: 'var(--gold-tint)' }}>beauty gallery.</span></h2>
         </div>
         <div className="public-svc-scroll">
         <div className={'home-gallery-grid' + (preview.length >= 3 ? ' marquee-on' : '')} style={gridStyle}>
@@ -164,8 +164,9 @@ function GalleryPreview({ gallery }) {
 }
 
 function Testimonials({ reviews }) {
-  // Admin-managed reviews take over; built-in samples only fill an empty list
-  const items = reviews && reviews.length > 0 ? reviews : TESTIMONIALS;
+  // Only display reviews supplied through the salon's review catalogue.
+  const items = Array.isArray(reviews) ? reviews : [];
+  if (items.length === 0) return null;
   return (
     <section className="section section-soft" style={{ padding: '32px 0', overflow: 'hidden' }}>
       <div className="container">

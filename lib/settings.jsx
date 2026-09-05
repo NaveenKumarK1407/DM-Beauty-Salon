@@ -5,7 +5,7 @@ import { cachedFetchJson, invalidateCached } from './clientCache';
 const DEFAULT_SETTINGS = {
   name: 'DM Beauty Parlour',
   phone: '+91 98765 43210',
-  email: 'hello@dmbeauty.in',
+  email: 'dmbeauty.medak@gmail.com',
   currency: 'INR · ₹',
   address: '2nd Floor, Above Pochamma Maidan, Medak 502110',
   openDays: 'Mon - Sat',

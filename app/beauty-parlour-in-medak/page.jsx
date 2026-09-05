@@ -7,8 +7,8 @@ import { getCityFromAddress } from '@/lib/utils';
 import { formatHoursDisplay } from '@/lib/hours';
 import { LocalSeoBody } from '@/components/LocalSeoView';
 import { MEDAK_FAQS, MEDAK_AREAS, MEDAK_GEO } from '@/lib/localSeo';
+import { SITE_URL, DEFAULT_EMAIL } from '@/lib/siteUrl';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://dmbeauty.in';
 const PATH = '/beauty-parlour-in-medak';
 
 export async function generateMetadata() {
@@ -61,7 +61,7 @@ export default async function BeautyParlourInMedakPage() {
   const settings = settingsRaw || {};
   const address = settings.address || '2nd Floor, Above Pochamma Maidan, Medak 502110';
   const phone = settings.phone || '+91 98765 43210';
-  const email = settings.email || 'hello@dmbeauty.in';
+  const email = settings.email || DEFAULT_EMAIL;
   const city = getCityFromAddress(address);
   const hours = formatHoursDisplay(settings);
   const name = settings.name || 'DM Beauty Parlour';
