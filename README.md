@@ -19,7 +19,7 @@
 
 ## ✨ Features
 
-- 🏠 **Public Website** — Hero, services marquee, gallery, testimonials, contact
+- 🏠 **Public Website* — Hero, services marquee, gallery, testimonials, contact
 - 📅 **Booking System** — Customers can book appointments with service selection & phone validation
 - 🖼️ **Gallery Lookbook** — Admin-managed photo gallery
 - 📦 **Packages** — Bridal & seasonal beauty packages with pricing
