@@ -1,8 +1,9 @@
-// POST /api/contact — store a contact-form message and notify the studio.
+// POST /api/contact — store enquiry + notify admin.
 
 import { NextResponse } from 'next/server';
-import { saveMessage } from '@/lib/store';
-import { notifyStudio } from '@/lib/notify';
+import { saveMessage, getStudioSettings } from '@/lib/store';
+import { notifyNewMessage } from '@/lib/bookingNotify.js';
+import { getWhatsAppHref } from '@/lib/whatsapp.js';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,7 +15,7 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { name, email, service, message } = payload || {};
+  const { name, email, phone, service, message } = payload || {};
   if (!name || !email || !message) {
     return NextResponse.json(
       { error: 'name, email and message are required' },
@@ -25,16 +26,25 @@ export async function POST(request) {
   const saved = await saveMessage({
     name,
     email,
+    phone: phone || null,
     service: service || 'General enquiry',
     message,
     status: 'new',
   });
 
-  await notifyStudio({
-    title: 'New enquiry · ' + (service || 'General'),
-    body: `${name}: ${String(message).slice(0, 80)}`,
-    data: { type: 'message', messageId: saved.id },
-  });
+  const notify = await notifyNewMessage(saved);
 
-  return NextResponse.json({ ok: true, message: saved }, { status: 201 });
+  const settings = await getStudioSettings();
+  const studioWhatsApp = getWhatsAppHref(
+    settings?.phone,
+    `Hi! I sent an enquiry via the website.\n\nName: ${name}\nService: ${service || 'General'}\nMessage: ${message}`
+  );
+
+  return NextResponse.json({
+    ok: true,
+    message: saved,
+    notify,
+    studioWhatsApp,
+    copy: 'We received your message. For a faster reply, message us on WhatsApp.',
+  }, { status: 201 });
 }

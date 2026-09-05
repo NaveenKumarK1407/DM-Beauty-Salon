@@ -352,6 +352,26 @@ function StepDetails({ data, update, svc }) {
 
 function StepConfirm({ data, svc, result, error, submitting, onHome, onAnother, onRetry }) {
   const { settings } = useSettings();
+  const [reminderState, setReminderState] = React.useState('idle'); // idle | loading | on | error | denied
+
+  const phoneDigits = normalizePhoneDigits(data.phone);
+  const phoneDisplay = phoneDigits ? `+91 ${phoneDigits}` : '';
+
+  // Register this device for push reminders tied to the booking phone number.
+  React.useEffect(() => {
+    if (!result || !phoneDigits || reminderState !== 'idle') return;
+    let cancelled = false;
+    (async () => {
+      setReminderState('loading');
+      const { enableCustomerReminders } = await import('@/lib/firebaseClient');
+      const res = await enableCustomerReminders(phoneDigits);
+      if (cancelled) return;
+      if (res.ok) setReminderState('on');
+      else if (res.reason === 'denied') setReminderState('denied');
+      else setReminderState('error');
+    })();
+    return () => { cancelled = true; };
+  }, [result, phoneDigits, reminderState]);
   if (submitting) {
     return <div className="confirm"><span className="eyebrow">One moment</span><h2 style={{ marginTop: 8 }}>Securing your chair…</h2></div>;
   }
@@ -393,17 +413,43 @@ function StepConfirm({ data, svc, result, error, submitting, onHome, onAnother, 
           <div className="line"><span>Time</span><span>{formatSlotLabel(data.slot)}</span></div>
           <div className="line"><span>Duration</span><span>{svc.duration}</span></div>
           <div className="line"><span>Stylist</span><span>Devi Madhuri</span></div>
+          {phoneDisplay && (
+            <div className="line"><span>Mobile</span><strong style={{ letterSpacing: '0.04em' }}>{phoneDisplay}</strong></div>
+          )}
           <div className="line total"><span>Total</span><span>{svc.price !== undefined && svc.price !== null && svc.price !== '' ? `₹${Number(svc.price).toLocaleString('en-IN')}` : 'On request'}</span></div>
         </div>
       )}
-      <p style={{ color: 'var(--muted)', maxWidth: 480, margin: '32px auto', fontSize: 14 }}>
-        Save your booking on WhatsApp below — it sends us your details and keeps a copy in your chat. If you need to reschedule, WhatsApp us at least 4 hours ahead.
+      {phoneDisplay && (
+        <p style={{ color: 'var(--muted)', maxWidth: 480, margin: '20px auto 0', fontSize: 13, lineHeight: 1.55 }}>
+          {reminderState === 'loading' && `Linking reminders to ${phoneDisplay}…`}
+          {reminderState === 'on' && `Reminders enabled for ${phoneDisplay}. We'll notify this number before your appointment.`}
+          {reminderState === 'denied' && `Allow notifications in your browser to get reminders on ${phoneDisplay}.`}
+          {reminderState === 'error' && `Booking saved under ${phoneDisplay}. Tap Save on WhatsApp below to keep a copy on your phone.`}
+          {reminderState === 'idle' && `Booking registered under ${phoneDisplay}. The studio has been notified.`}
+        </p>
+      )}
+      <p style={{ color: 'var(--muted)', maxWidth: 480, margin: '16px auto 32px', fontSize: 14 }}>
+        Tap <strong style={{ color: 'var(--ink)' }}>Save on WhatsApp</strong> to send your booking to the salon and keep a copy in your chat.
       </p>
       <div className="confirm-actions" style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
         {waNumber && (
           <a className="btn btn-primary" href={waLink} target="_blank" rel="noopener noreferrer">
             <IconWa /> &nbsp; Save on WhatsApp
           </a>
+        )}
+        {reminderState === 'denied' && phoneDigits && (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={async () => {
+              setReminderState('loading');
+              const { enableCustomerReminders } = await import('@/lib/firebaseClient');
+              const res = await enableCustomerReminders(phoneDigits);
+              setReminderState(res.ok ? 'on' : res.reason === 'denied' ? 'denied' : 'error');
+            }}
+          >
+            Enable reminders for {phoneDisplay}
+          </button>
         )}
         <button className="btn btn-ghost" onClick={onHome}>Back to Home</button>
         <button className="btn btn-ghost" onClick={onAnother}>Book Another</button>

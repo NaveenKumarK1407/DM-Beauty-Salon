@@ -217,6 +217,7 @@ export function Footer() {
   const pathname = usePathname();
   const isActive = (href) => (href === '/' ? pathname === '/' : pathname?.startsWith(href));
   const isOpen = isStudioOpen(settings);
+  const city = settings?.address ? getCityFromAddress(settings.address) : 'Medak';
   const mapsUrl = settings?.address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`
     : 'https://maps.google.com';
@@ -275,6 +276,16 @@ export function Footer() {
               <li><Link href="/gallery" className={isActive('/gallery') ? 'active' : ''}>Gallery</Link></li>
               <li><Link href="/booking" className={isActive('/booking') ? 'active' : ''}>Book Appointment</Link></li>
               <li><Link href="/contact" className={isActive('/contact') ? 'active' : ''}>Contact</Link></li>
+              {/* Local landing page — the footer link is what passes site-wide
+                  internal link equity to the page targeting "beauty parlour in Medak". */}
+              <li>
+                <Link
+                  href="/beauty-parlour-in-medak"
+                  className={isActive('/beauty-parlour-in-medak') ? 'active' : ''}
+                >
+                  Beauty Parlour in {city}
+                </Link>
+              </li>
             </ul>
           </div>
           <div>

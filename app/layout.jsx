@@ -2,6 +2,7 @@ import './globals.css';
 import { SiteChrome } from '@/components/Chrome';
 import { getStudioSettings } from '@/lib/store';
 import { getCityFromAddress } from '@/lib/utils';
+import { MEDAK_GEO, MEDAK_AREAS } from '@/lib/localSeo';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://dmbeauty.in';
 
@@ -13,20 +14,32 @@ export async function generateMetadata() {
 
   return {
     metadataBase: new URL(SITE_URL),
+    // Title leads with the exact phrase people type ("beauty parlour in Medak")
+    // and keeps the brand at the end, where it still reads naturally in the SERP.
     title: {
-      default: `DM Beauty Parlour — Bridal & Beauty Studio in ${city}, Telangana`,
-      template: `%s · DM Beauty Parlour`,
+      default: `Beauty Parlour in ${city} | Bridal Makeup & Beauty Salon`,
+      template: `%s · DM Beauty Parlour ${city}`,
+      // absolute-title pages (the local landing page) opt out of the template
+      // above so the brand is not appended twice.
     },
     description:
-      `A small, considered beauty studio for everyday rituals and once-in-a-lifetime bridal looks. Bridal makeup, hair, skin, nails and more in ${city}, Telangana.`,
+      `Looking for a beauty parlour in ${city}? DM Beauty Parlour is a ladies beauty salon and bridal makeup studio in ${city}, Telangana 502110 — HD & airbrush bridal makeup, hair colour, facials, gel nails, waxing and threading. Walk-ins welcome. Call or book online.`,
     keywords: [
+      `beauty parlour in ${city}`,
+      `best beauty parlour in ${city}`,
       `beauty parlour ${city}`,
-      `bridal makeup ${city}`,
-      'beauty studio Telangana',
+      `ladies beauty parlour ${city}`,
+      `beauty salon in ${city}`,
+      `bridal makeup in ${city}`,
+      `bridal makeup artist in ${city}`,
+      `makeup artist ${city}`,
+      `hair salon ${city}`,
+      `facial in ${city}`,
+      `nail art ${city}`,
+      `waxing and threading ${city}`,
+      `beauty parlour near me ${city}`,
+      `${city} Telangana 502110`,
       'HD makeup',
-      'hair colour',
-      'facial',
-      'nail art',
       'DM Beauty Parlour',
     ],
     authors: [{ name: 'DM Beauty Parlour' }],
@@ -66,7 +79,7 @@ export async function generateMetadata() {
 }
 
 export const viewport = {
-  themeColor: '#1a1a1a',
+  themeColor: '#181410',
   width: 'device-width',
   initialScale: 1,
 };
@@ -88,6 +101,10 @@ export default async function RootLayout({ children }) {
     postalCode = pinCodeMatch[0];
   }
 
+  const socialProfiles = [settings.instagram, settings.facebook, settings.googleMapsUrl]
+    .filter((u) => typeof u === 'string' && /^https?:\/\//.test(u.trim()))
+    .map((u) => u.trim());
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BeautySalon',
@@ -107,8 +124,15 @@ export default async function RootLayout({ children }) {
       postalCode: postalCode,
       addressCountry: 'IN',
     },
-    geo: { '@type': 'GeoCoordinates', latitude: 18.0461, longitude: 78.2693 },
-    aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.9', reviewCount: '312' },
+    geo: { '@type': 'GeoCoordinates', latitude: MEDAK_GEO.lat, longitude: MEDAK_GEO.lng },
+    hasMap: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
+    // Towns Google should associate the business with for "near me" searches.
+    areaServed: MEDAK_AREAS.map((a) => ({ '@type': 'Place', name: a })),
+    knowsLanguage: ['te', 'hi', 'en'],
+    // sameAs is one of the strongest entity signals for the map pack — it links
+    // this site to the profiles Google already trusts. Only real, live profiles
+    // are emitted; an empty setting is dropped rather than shipped as a dead URL.
+    ...(socialProfiles.length ? { sameAs: socialProfiles } : {}),
     openingHoursSpecification: [
       {
         '@type': 'OpeningHoursSpecification',

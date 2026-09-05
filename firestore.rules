@@ -35,7 +35,11 @@ service cloud.firestore {
     match /fcmTokens/{token} {
       allow write: if request.resource.data.token == token
                    && request.resource.data.token is string
-                   && request.resource.data.token.size() > 10;
+                   && request.resource.data.token.size() > 10
+                   && (
+                     !('role' in request.resource.data)
+                     || request.resource.data.role in ['admin', 'customer']
+                   );
       allow read: if request.auth != null;
       allow delete: if false;
     }

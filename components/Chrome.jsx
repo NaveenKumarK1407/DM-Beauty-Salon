@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { AppearanceProvider } from '@/lib/appearance';
 import { SettingsProvider } from '@/lib/settings';
 import { TopNav, Footer } from './Nav';
+import { WhatsAppFab } from './WhatsAppFab';
 
 export function SiteChrome({ children, initialSettings = null }) {
   const pathname = usePathname();
@@ -32,6 +33,7 @@ export function SiteChrome({ children, initialSettings = null }) {
         {!bare && <TopNav />}
         <main>{children}</main>
         {!bare && <Footer />}
+        {!bare && <WhatsAppFab />}
       </AppearanceProvider>
     </SettingsProvider>
   );

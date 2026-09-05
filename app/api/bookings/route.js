@@ -1,9 +1,9 @@
-// POST /api/bookings  — create a booking, persist it, notify the studio.
+// POST /api/bookings  — create a booking, persist it, notify admin + customer.
 // GET  /api/bookings   — list recent bookings (used by the admin dashboard).
 
 import { NextResponse } from 'next/server';
 import { saveBooking, listBookings } from '@/lib/store';
-import { notifyStudio } from '@/lib/notify';
+import { notifyBookingCreated } from '@/lib/bookingNotify.js';
 import { getPhoneValidationError, normalizePhoneDigits } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -50,11 +50,7 @@ export async function POST(request) {
     status: 'pending',
   });
 
-  const notify = await notifyStudio({
-    title: 'New booking · ' + (serviceName || serviceId),
-    body: `${name} — ${date || 'date TBD'}${slot ? ' at ' + slot : ''} · ${reference}`,
-    data: { type: 'booking', reference, bookingId: booking.id },
-  });
+  const notify = await notifyBookingCreated(booking);
 
   return NextResponse.json({ ok: true, reference, booking, notify }, { status: 201 });
 }

@@ -12,6 +12,7 @@ export function ContactView() {
   const [sent, setSent] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState(null);
+  const [studioWhatsApp, setStudioWhatsApp] = React.useState(null);
   const [form, setForm] = React.useState({ name: '', email: '', service: 'General enquiry', message: '' });
   const { settings } = useSettings();
   const city = settings?.address ? getCityFromAddress(settings.address) : 'Medak';
@@ -29,6 +30,7 @@ export function ContactView() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Could not send message');
+      setStudioWhatsApp(json.studioWhatsApp || null);
       setSent(true);
     } catch (err) {
       setError(err.message || 'Something went wrong');
@@ -118,7 +120,12 @@ export function ContactView() {
                     <IconCheck size={24} />
                   </div>
                   <h3>Message received.</h3>
-                  <p style={{ color: 'var(--muted)', marginTop: 8 }}>We&apos;ll get back to you within a few hours. In the meantime, try us on WhatsApp for faster reach.</p>
+                  <p style={{ color: 'var(--muted)', marginTop: 8 }}>We&apos;ll get back to you within a few hours. For a faster reply, message us on WhatsApp.</p>
+                  {studioWhatsApp && (
+                    <a className="btn btn-primary" href={studioWhatsApp} target="_blank" rel="noopener noreferrer" style={{ marginTop: 20, display: 'inline-flex' }}>
+                      <IconWa /> &nbsp; Message on WhatsApp
+                    </a>
+                  )}
                 </div>
               )}
             </div>
