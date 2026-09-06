@@ -740,9 +740,45 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
 
 /* ── About / two-col ───────────────────────────────────── */
 .about-two { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
-.about-two .img { aspect-ratio: 4/5; max-height: 480px; overflow: hidden; border-radius: 4px; }
-.about-two .img img { width: 100%; height: 100%; object-fit: cover; }
+/* Matches the source artwork (1498x848) so the full-length portrait is never
+   cropped — a 4/5 frame cut the subject off at the right. */
+.about-two .img { aspect-ratio: 1498 / 848; max-height: 480px; overflow: hidden; border-radius: 4px; }
+.about-two .img picture { display: contents; }
+.about-two .img img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+/* contain, not cover: the banner's own headline and icon row run close to its
+   edges, so a crop would clip the lettering. */
+.about-overlay .img img { object-fit: contain; }
 .about-two .body { display: flex; flex-direction: column; gap: 28px; padding: 0 20px; }
+
+/* ── About: copy overlaid on the artwork ──────────────────
+   Image and text share one grid cell. The subject stands on the right of the
+   photo, so the copy takes the empty gold half on the left. */
+/* Full-bleed: no max-width and no side gutters, so the artwork meets both
+   edges of the viewport. The section's own vertical padding also goes, since
+   the image supplies its own breathing room. */
+.about-section { padding: 0; }
+.about-full { width: 100%; }
+.about-overlay {
+  display: grid;
+  grid-template-areas: 'about-stack';
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+.about-overlay .img {
+  grid-area: about-stack;
+  position: relative;
+  aspect-ratio: 1731 / 909;
+  max-height: none;
+  border-radius: 0;
+}
+/* The artwork now carries the headline, copy, logo and icon row itself, so the
+   HTML text is hidden at every size. It stays in the DOM for search engines
+   and screen readers — the alt text repeats it for anyone who cannot see the
+   image. No scrim either: nothing is laid over the picture any more. */
+.about-overlay .body { display: none; }
+.about-overlay .img::after { content: none; }
 .about-two p { color: var(--ink-2); font-size: 16px; max-width: 480px; margin: 0; }
 .studio-quote { font-style: italic; font-family: var(--font-display); font-size: 20px; color: var(--ink); }
 .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 12px; }
@@ -1512,7 +1548,9 @@ a.map:hover {
   .hero .hero-text h1 { font-size: clamp(48px, 8vw, 80px) !important; }
   .svc-grid, .testi-grid { grid-template-columns: 1fr 1fr; }
   .about-two, .contact-grid { grid-template-columns: 1fr; gap: 48px; }
-  .about-two .img { max-height: 480px; }
+  /* Single column here, so the image spans the full width — capping the
+     height would crop the portrait rather than scale it. */
+  .about-two .img { max-height: none; }
   .admin-grid { grid-template-columns: 1fr; }
   .admin-shell { grid-template-columns: 220px minmax(0, 1fr); }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1553,7 +1591,16 @@ a.map:hover {
   .svc-card .img + div, .svc-card .body { margin-top: 10px; }
   .about-two, .contact-grid { gap: 24px; }
   .about-two .body { gap: 14px; }
-  .about-two .img { aspect-ratio: 16/10; max-height: 240px; }
+  /* Square, matching the mobile crop — a 16/10 letterbox cut the standing
+     figure off at the knees. */
+  .about-two .img { aspect-ratio: 1 / 1; max-height: none; }
+  /* Portrait poster on phones. Frame matches the source ratio and `contain`
+     guarantees the baked-in branding and lettering are never cropped. */
+  .about-overlay .img { aspect-ratio: 938 / 1677; }
+  .about-overlay .img img { object-fit: contain; }
+  .about-overlay .body { display: none; }
+  /* No scrim either: it existed only to make the overlaid copy readable. */
+  .about-overlay .img::after { background: none; }
   .about-two h2 { font-size: clamp(24px, 7vw, 32px); }
   .about-two p { font-size: 14px; }
   .studio-quote { font-size: 17px; }

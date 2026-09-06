@@ -86,11 +86,18 @@ function FeaturedServices({ services }) {
 
 function AboutStrip({ city }) {
   return (
-    <section className="section section-soft">
-      <div className="container">
-        <div className="about-two">
+    <section className="section section-soft about-section">
+      {/* No .container — the artwork runs edge to edge. Copy sits over its empty
+          gold half rather than beside it, so it reads as one image at any size. */}
+      <div className="about-full">
+        <div className="about-two about-overlay">
           <div className="img">
-            <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=900&q=85" alt="Salon interior inspiration" loading="lazy" />
+            <picture>
+              <source media="(max-width: 768px)" srcSet="/heropage/about-mobile-2.webp" width="938" height="1677" />
+              <img src="/heropage/about-desktop-2.webp" width="1731" height="909"
+                alt={`A second home for women who care about how they feel — DM Beauty Parlour, ${city}. Founded in 2022 by Devi Madhuri on a simple belief: beauty is not just about looks, but about confidence, care, and you.`}
+                loading="lazy" decoding="async" />
+            </picture>
           </div>
           <div className="body">
             <h2>A second home for women who care about how they feel.</h2>
