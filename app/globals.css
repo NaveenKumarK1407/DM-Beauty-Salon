@@ -1636,8 +1636,8 @@ a.map:hover {
     stroke-width: 2.6;
   }
   .nav-logo img {
-    width: 72px;
-    height: 72px;
+    width: 48px;
+    height: 48px;
     display: block;
   }
   .nav-start { align-self: stretch; align-items: center; }
