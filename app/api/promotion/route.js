@@ -4,9 +4,13 @@ import { getAdminAuth } from '@/lib/firebaseAdmin';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request) {
   try {
-    return NextResponse.json({ promotion: await getHomepagePromotion() });
+    let promotion = await getHomepagePromotion();
+    if (promotion && new URL(request.url).searchParams.has('status')) {
+      promotion = { enabled: promotion.enabled, expiresAt: promotion.expiresAt, updatedAt: promotion.updatedAt };
+    }
+    return NextResponse.json({ promotion }, { headers: { 'Cache-Control': 'no-store' } });
   } catch {
     return NextResponse.json({ error: 'Could not load the homepage popup.' }, { status: 500 });
   }
@@ -36,7 +40,11 @@ export async function PUT(request) {
         (body.enabled && !body.image)) {
       return NextResponse.json({ error: 'Choose a valid image before enabling the popup. The optional description must be 160 characters or fewer.' }, { status: 400 });
     }
-    const promotion = await saveHomepagePromotion({ enabled: body.enabled, image: body.image, title: (body.title || '').trim() });
+    const duration = body.durationHours;
+    if (duration != null && (!Number.isFinite(duration) || duration <= 0 || duration > 8760)) {
+      return NextResponse.json({ error: 'Choose a duration between 1 hour and 365 days.' }, { status: 400 });
+    }
+    const promotion = await saveHomepagePromotion({ enabled: body.enabled, image: body.image, title: (body.title || '').trim(), expiresAt: body.enabled && duration ? new Date(Date.now() + duration * 3600000).toISOString() : null });
     return NextResponse.json({ promotion });
   } catch {
     return NextResponse.json({ error: 'Could not save the popup. Please try again.' }, { status: 500 });

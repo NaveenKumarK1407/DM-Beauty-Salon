@@ -35,6 +35,8 @@ export function PromotionPanel({ user }) {
   const [message, setMessage] = React.useState('');
   const [error, setError] = React.useState('');
   const [preview, setPreview] = React.useState(false);
+  const [duration, setDuration] = React.useState(24);
+  const [unit, setUnit] = React.useState('hours');
 
   React.useEffect(() => {
     let cancelled = false;
@@ -59,18 +61,19 @@ export function PromotionPanel({ user }) {
     finally { setBusy(false); }
   }
 
-  async function save(event) {
-    event.preventDefault();
+  async function save(event, action) {
+    event?.preventDefault();
     setBusy(true); setError(''); setMessage('');
     try {
       const token = await user.getIdToken();
       const res = await fetch('/api/promotion', {
         method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: form.title, image: form.image, enabled: form.enabled }),
+        body: JSON.stringify(action === 'delete' ? { title: '', image: '', enabled: false } : { title: form.title, image: form.image, enabled: action === 'stop' ? false : form.enabled, durationHours: Number(duration) * (unit === 'days' ? 24 : 1) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Could not save the popup.');
       setForm(data.promotion);
+      setPreview(false);
       setMessage(data.promotion.enabled ? 'Saved! Visitors will see this post when they open the homepage.' : 'Saved. The homepage popup is turned off.');
     } catch (err) { setError(err.message); }
     finally { setBusy(false); }
@@ -95,16 +98,26 @@ export function PromotionPanel({ user }) {
         <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
           <input type="checkbox" checked={form.enabled} onChange={e => setForm({ ...form, enabled: e.target.checked })} /> Show popup on the homepage
         </label>
+        <div className="field">
+          <label htmlFor="promotion-duration">Keep popup active for</label>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <input id="promotion-duration" type="number" min="1" max={unit === 'days' ? 365 : 8760} required value={duration} onChange={e => setDuration(e.target.value)} />
+            <select aria-label="Duration unit" value={unit} onChange={e => setUnit(e.target.value)}><option value="hours">Hours</option><option value="days">Days</option></select>
+          </div>
+          <p>The countdown starts when you save. Each visit still shows the popup for 5 seconds.</p>
+          {form.expiresAt && <p>Scheduled end: {new Date(form.expiresAt).toLocaleString()}</p>}
+        </div>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <button className="btn btn-primary" type="submit" disabled={form.enabled && !form.image}>{busy ? 'Saving...' : 'Save Popup'}</button>
           <button className="btn btn-ghost" type="button" disabled={!form.image} onClick={() => setPreview(true)}>Preview for 5 seconds</button>
-          {form.image && <button className="btn btn-ghost" type="button" onClick={() => setForm({ title: '', image: '', enabled: false })}>Remove image</button>}
+          {form.image && <button className="btn btn-ghost" type="button" onClick={() => save(null, 'stop')}>Stop now</button>}
+          {form.image && <button className="btn btn-ghost" type="button" onClick={() => save(null, 'delete')}>Delete popup</button>}
         </div>
-        <p style={{ fontSize: 12, color: 'var(--muted)' }}>Changes appear on your website after you save. Turn the popup off when your promotion ends.</p>
+        <p style={{ fontSize: 12, color: 'var(--muted)' }}>Stop and delete save immediately. Open visitor pages check for changes every second while the popup is showing.</p>
       </fieldset>
       {error && <p role="alert" style={{ marginTop: 16, color: 'var(--danger, #b42318)' }}>{error}</p>}
       {message && <p role="status" style={{ marginTop: 16 }}>{message}</p>}
     </form>
-    {preview && <HomepagePopup promotion={{ ...form, enabled: true }} onDismiss={() => setPreview(false)} />}
+    {preview && <HomepagePopup promotion={{ ...form, enabled: true, expiresAt: null }} onDismiss={() => setPreview(false)} />}
   </section>;
 }

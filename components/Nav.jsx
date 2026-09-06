@@ -9,7 +9,6 @@ import { ThemeToggle } from './ThemeToggle';
 import { Socials } from './Socials';
 import { useSettings } from '@/lib/settings';
 import { getCityFromAddress, isStudioOpen, getMobileBrandStatus } from '@/lib/utils';
-import { getFooterHoursParts } from '@/lib/hours';
 import { VisitHoursBlock } from './HoursText';
 
 const LINKS = [
@@ -216,7 +215,6 @@ export function Footer() {
   const { settings } = useSettings();
   const pathname = usePathname();
   const isActive = (href) => (href === '/' ? pathname === '/' : pathname?.startsWith(href));
-  const isOpen = isStudioOpen(settings);
   const city = settings?.address ? getCityFromAddress(settings.address) : 'Medak';
   const mapsUrl = settings?.address
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`
@@ -231,39 +229,6 @@ export function Footer() {
               <div className="brand">{settings.name || 'DM Beauty'}<small>Est. 2022</small></div>
             </Link>
             <p>A studio for everyday beauty rituals and once-in-a-lifetime bridal moments.</p>
-            {/* Hours — above social icons: open hours · live status │ closed days */}
-            {(() => {
-              const { hoursLine, statusLabel, closedParts, rightSide, statusColor } = getFooterHoursParts(settings, isOpen);
-              return (
-                <div className="footer-hours-badge">
-                  <span className="fh-hours">{hoursLine}</span>
-                  <span className="fh-dot">·</span>
-                  <span className="fh-status" style={{ color: statusColor }}>
-                    {statusLabel}
-                  </span>
-                  <span className="fh-sep">|</span>
-                  {closedParts.length > 0 ? (
-                    <span className="fh-today">
-                      {closedParts.map((part, i) => {
-                        const [day] = part.split(' · ');
-                        return (
-                          <span key={day}>
-                            {i > 0 && ', '}
-                            {day} · <span className="hours-closed">CLOSED</span>
-                          </span>
-                        );
-                      })}
-                    </span>
-                  ) : (
-                    <span className="fh-today">
-                      {rightSide.split(' · ')[0]} ·{' '}
-                      <span className={isOpen ? 'fh-open' : 'hours-closed'}>{statusLabel}</span>
-                    </span>
-                  )}
-                </div>
-              );
-            })()}
-            {/* Social icons — below hours */}
             <div style={{ marginTop: 12 }}>
               <Socials />
             </div>
@@ -303,15 +268,28 @@ export function Footer() {
         </div>
         <div className="footer-bot">
           <div>
-            © 2026 {settings.name || 'DM Beauty Parlour'}. All rights reserved. · Created by{' '}
-            <a
-              href="https://in.linkedin.com/in/naveen-kumar-kusangi-721b5826b"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="footer-credit-name"
-            >
-              Naveen Kusangi
-            </a>
+            <div>© 2026 {settings.name || 'DM Beauty Parlour'}. All rights reserved.</div>
+            {/* Credits on their own line so long names never wrap mid-sentence. */}
+            <div className="footer-credit-line">
+              Created by{' '}
+              <a
+                href="https://in.linkedin.com/in/naveen-kumar-kusangi-721b5826b"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-credit-name"
+              >
+                Naveen Kusangi
+              </a>
+              {' & '}
+              <a
+                href="https://saikumarkusangi-portfolio.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-credit-name"
+              >
+                Sai Kumar
+              </a>
+            </div>
           </div>
         </div>
       </div>

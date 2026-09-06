@@ -339,18 +339,17 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
   position: relative;
   display: grid;
   grid-template-areas: 'hero-stack';
+  /* minmax(0, 1fr): without the 0 minimum the single column is sized by its
+     widest child, so the overlay copy could push past the viewport and get
+     clipped by the overflow below instead of wrapping. */
+  grid-template-columns: minmax(0, 1fr);
   width: 100%;
   min-height: calc(100vh - 80px);
   background: #0d0b08;
   overflow: hidden;
 }
-.hero::before {
-  content: '';
-  grid-area: hero-stack;
-  background: rgba(5, 4, 2, 0.22);
-  z-index: 1;
-  pointer-events: none;
-}
+/* Flat scrim removed — .hero-img-wrap::after now shapes contrast per side. */
+.hero::before { content: none; }
 .hero-img-wrap {
   grid-area: hero-stack;
   position: relative;
@@ -360,6 +359,7 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
   overflow: hidden;
   background: #0a0a0a;
 }
+.hero-img-wrap picture { display: contents; }
 .hero-img-wrap img {
   position: absolute;
   inset: 0;
@@ -369,21 +369,26 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
   min-width: 100%;
   min-height: 100%;
   object-fit: cover;
-  object-position: 30% 40%;
-  filter: blur(5px) brightness(0.72);
-  transform: scale(1.06);
-  opacity: 0.95;
+  /* Branded studio photo — shown sharp. Anchored right so the baked-in
+     "Beauty Brings Out The Best In You" lettering stays in frame when the
+     2.19:1 source is cropped to a 16:9-ish viewport. */
+  object-position: 100% 30%;
+  opacity: 1;
 }
 .hero-img-wrap::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
+  /* Scrim only over the left text column; the model and the gold lettering on
+     the right stay untouched so the branded artwork reads as shot. */
   background: linear-gradient(
-    105deg,
-    rgba(5, 4, 2, 0.55) 0%,
-    rgba(5, 4, 2, 0.28) 42%,
-    rgba(5, 4, 2, 0.12) 100%
+    100deg,
+    rgba(5, 4, 2, 0.88) 0%,
+    rgba(5, 4, 2, 0.78) 22%,
+    rgba(5, 4, 2, 0.52) 40%,
+    rgba(5, 4, 2, 0.16) 60%,
+    rgba(5, 4, 2, 0) 76%
   );
   pointer-events: none;
 }
@@ -423,6 +428,7 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
 }
 .hero .hero-text .italic { color: #e8c99a !important; font-style: italic; }
 .hero .hero-text p { color: rgba(255, 255, 255, 0.82) !important; font-size: 17px !important; }
+.hero .hero-text .hero-lede { max-width: 480px; line-height: 1.6; }
 .hero-meta {
   display: flex;
   align-items: center;
@@ -433,16 +439,29 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
   text-transform: uppercase;
 }
 .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
+/* Gold CTAs, matching the studio artwork */
 .hero .hero-ctas .btn-primary {
-  background: #fff !important;
-  color: #111 !important;
-  border-color: #fff !important;
+  background: linear-gradient(100deg, #f6dfae 0%, #e3bd7f 48%, #c99a55 100%) !important;
+  color: #2a1d0c !important;
+  border-color: transparent !important;
+  font-weight: 600;
+  box-shadow: 0 6px 22px rgba(180, 138, 74, 0.34);
+}
+.hero .hero-ctas .btn-primary:hover {
+  background: linear-gradient(100deg, #fbead0 0%, #eecb92 48%, #d8a961 100%) !important;
+  box-shadow: 0 8px 28px rgba(180, 138, 74, 0.46);
 }
 .hero .hero-ctas .btn-ghost {
-  border-color: rgba(255, 255, 255, 0.5) !important;
-  color: #fff !important;
+  border-color: rgba(226, 189, 128, 0.72) !important;
+  color: #f2dcb6 !important;
   background: transparent !important;
 }
+.hero .hero-ctas .btn-ghost:hover {
+  border-color: #e8c99a !important;
+  background: rgba(232, 201, 154, 0.1) !important;
+}
+/* Desktop already carries this lettering inside the artwork itself. */
+.hero-tagline { display: none; }
 .hero-tag { display: none !important; }
 .hero-tag .num { font-family: var(--font-display); font-size: 36px; line-height: 1; color: var(--gold-deep); }
 .hero-tag .lbl { font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
@@ -866,7 +885,8 @@ a.map:hover {
 .footer h4 { font-family: var(--font-body); font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 500; margin-bottom: 8px; }
 .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 24px; padding-bottom: 12px; border-bottom: 1px solid; align-items: start; }
 .footer .brand { text-align: left; cursor: default; }
-.footer-brand-col { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+.footer-brand-col { display: flex; flex-direction: column; align-items: flex-start; text-align: left; min-width: 0; }
+.footer-grid > div { min-width: 0; overflow-wrap: anywhere; }
 .footer-brand-col .brand { text-align: left !important; }
 .footer p { font-size: 12px; max-width: 320px; margin-top: 6px; line-height: 1.5; }
 .footer ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
@@ -882,9 +902,11 @@ a.map:hover {
   letter-spacing: 0.1em;
   color: var(--inverse-muted);
 }
+/* Credits sit on their own line under the copyright. */
+.footer-credit-line { margin-top: 4px; }
 .footer-credit-name {
   font-family: var(--font-display);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 12px;
   letter-spacing: 0.04em;
   color: #ffffff;
@@ -1171,7 +1193,7 @@ a.map:hover {
 .footer-hours-badge {
   display: inline-flex;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 8px;
   font-size: 11px;
   letter-spacing: 0.02em;
@@ -1188,8 +1210,10 @@ a.map:hover {
 .footer-hours-badge .fh-status,
 .footer-hours-badge .fh-sep,
 .footer-hours-badge .fh-today {
-  white-space: nowrap;
-  flex-shrink: 0;
+  white-space: normal;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  flex-shrink: 1;
 }
 .footer-hours-badge .fh-dot {
   opacity: 0.55;
@@ -1691,46 +1715,102 @@ a.map:hover {
   /* Compact admin-head button row */
   .admin-head > div:last-child { gap: 8px; }
   .admin-head .btn { padding: 9px 16px; font-size: 10px; letter-spacing: 0.12em; }
+  /* Portrait artwork on top, copy in the gold bokeh below it. The scrim stays
+     clear over the model and deepens through the lower half so the headline,
+     paragraph and CTAs hold contrast against the bokeh. */
   .hero-img-wrap::after {
     background: linear-gradient(
       to bottom,
-      rgba(5, 4, 2, 0.12) 0%,
-      rgba(5, 4, 2, 0.26) 50%,
-      rgba(5, 4, 2, 0.42) 100%
+      rgba(5, 4, 2, 0.46) 0%,
+      rgba(5, 4, 2, 0.16) 16%,
+      rgba(5, 4, 2, 0) 34%,
+      rgba(5, 4, 2, 0.34) 50%,
+      rgba(5, 4, 2, 0.66) 66%,
+      rgba(5, 4, 2, 0.82) 100%
     );
   }
   .hero {
-    min-height: 0;
+    /* Tall enough for the portrait to clear the model before the copy starts */
+    min-height: max(calc(100dvh - 72px), 620px);
   }
-  /* Background only covers the text block — no full-screen image below */
   .hero-img-wrap {
     min-height: 0;
     align-self: stretch;
   }
   .hero-img-wrap img {
-    object-position: 58% 18%;
+    /* Top-centred: keeps the model's face in the upper half, as drawn */
+    object-position: 50% 0%;
   }
   .hero-text {
-    align-self: start;
-    padding: 16px var(--gutter) 28px;
-    padding-left: var(--gutter);
-    gap: 16px;
-    justify-content: flex-start;
+    /* Pinned to the lower gold band rather than the top */
+    align-self: end;
+    padding: 0 20px 32px;
+    padding-left: 20px;
+    gap: 14px;
+    justify-content: flex-end;
     min-height: 0;
     max-width: none;
+    width: 100%;
   }
-  .hero .hero-text .eyebrow {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 0.14em;
+  /* Flex children default to min-width:auto, so a long word or a wide clamped
+     heading can push the column past the viewport and clip the copy. */
+  .hero .hero-text > * { min-width: 0; max-width: 100%; }
+  .hero .hero-text p,
+  .hero .hero-text .hero-lede { max-width: 100%; overflow-wrap: break-word; }
+  /* One full-width gold pill on phones — "Explore Services" is desktop-only, so
+     the single primary action carries the whole tap target. */
+  .hero-ctas { flex-direction: column; align-items: stretch; gap: 12px; width: 100%; }
+  .hero .hero-ctas .btn { justify-content: center; padding: 16px 24px; width: 100%; }
+  .hero .hero-ctas .btn-ghost { display: none; }
+  /* Desktop-only eyebrow. On phones it wrapped to two lines and crowded the
+     model, so the headline carries the location instead. The studio name and
+     city still ship in the nav, the <h1> and the JSON-LD, so nothing is lost
+     for search — this is a purely visual trim. */
+  .hero .hero-text .eyebrow { display: none; }
+  /* Gold script tagline pinned top-left over the artwork, mirroring the
+     lettering that is baked into the desktop image. */
+  .hero > .hero-tagline {
+    display: block;
+    grid-area: hero-stack;
+    align-self: start;
+    justify-self: start;
+    z-index: 3;
+    margin: 0;
+    /* Own soft scrim: the bokeh behind this corner is bright, so the gold
+       needs its own backing to stay readable rather than relying on the
+       image happening to be dark there. */
+    /* Nudged in off the left edge so it reads over the mirror bokeh rather
+       than crowding the gold leaf border. No backing box — the gold sits
+       straight on the artwork, held legible by a soft glow alone. */
+    padding: 26px 26px 18px 52px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: clamp(22px, 6vw, 28px);
+    line-height: 1.24;
+    /* White, not gold — gold-on-gold bokeh gave almost no separation. */
+    color: #fff;
+    text-shadow: 0 2px 12px rgba(20, 10, 0, 0.7), 0 1px 3px rgba(20, 10, 0, 0.5);
+    pointer-events: none;
   }
-  .hero .hero-text h1 { font-size: clamp(38px, 11vw, 56px) !important; }
+  .hero > .hero-tagline::after {
+    content: '';
+    display: block;
+    width: 66px;
+    height: 2px;
+    margin-top: 10px;
+    background: linear-gradient(90deg, #fff, rgba(255, 255, 255, 0.2));
+  }
+  /* "BRIDAL · SKIN · HAIR · NAILS" is desktop-only */
+  .hero .hero-meta { display: none; }
+  .hero .hero-text h1 { font-size: clamp(36px, 10.5vw, 56px) !important; }
   .hero .hero-text p { font-size: 15px !important; }
 }
 @media (max-width: 480px) {
   .masonry { column-count: 1; }
   .nav-actions .admin-link { display: none; }
-  .hero-meta { flex-direction: column; align-items: flex-start; gap: 6px; }
+  /* Single "BRIDAL · SKIN · HAIR · NAILS" line, as drawn in the mockup */
+  .hero-meta { flex-direction: row; align-items: center; gap: 10px; font-size: 11px; letter-spacing: 0.12em; }
   .stat-card .v { font-size: 28px; }
   .field-row { grid-template-columns: 1fr; }
   .step { padding: 12px 10px; }

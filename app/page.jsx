@@ -16,12 +16,20 @@ function Hero({ city }) {
   return (
     <section className="hero">
       <div className="hero-img-wrap" aria-hidden="true">
-        <img src="https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1600&q=85" alt="" />
+        {/* Art-directed: portrait crop on mobile, ultra-wide on desktop.
+            fetchPriority high — this is the LCP element. */}
+        <picture>
+          <source media="(max-width: 768px)" srcSet="/heropage/hero-mobile.webp" width="938" height="1677" />
+          <img src="/heropage/hero-desktop.webp" alt="" width="1855" height="848" fetchPriority="high" decoding="async" />
+        </picture>
       </div>
+      {/* Baked into the desktop artwork, but cropped out of the portrait
+          version — re-added as live text at the top-left, phones only. */}
+      <p className="hero-tagline">Beauty<br />Brings Out<br />The Best<br />In You</p>
       <div className="hero-text">
         <span className="eyebrow">DM Beauty Parlour · {city}, Telangana</span>
         <h1>Beauty salon<br /><span className="italic">in {city}.</span></h1>
-        <p style={{ maxWidth: 480, fontSize: 17, lineHeight: 1.6 }}>
+        <p className="hero-lede">
           From a soft Sunday facial to the morning you become a bride — DM Beauty is a small, considered studio for everyday rituals and once-in-a-lifetime looks.
         </p>
         <div className="hero-ctas">

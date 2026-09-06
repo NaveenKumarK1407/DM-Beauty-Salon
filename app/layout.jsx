@@ -54,10 +54,10 @@ export async function generateMetadata() {
         `Everyday beauty rituals and once-in-a-lifetime bridal looks, crafted by Devi Madhuri in ${city}, Telangana.`,
       images: [
         {
-          url: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1200&q=85',
+          url: '/heropage/og-hero.jpg',
           width: 1200,
           height: 630,
-          alt: 'Beauty and makeup inspiration',
+          alt: `Bridal makeup by DM Beauty Parlour, ${city}`,
         },
       ],
     },
@@ -115,7 +115,7 @@ export default async function RootLayout({ children }) {
     telephone: phone,
     email: email,
     priceRange: '₹₹',
-    image: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=1200&q=85',
+    image: `${SITE_URL}/heropage/og-hero.jpg`,
     address: {
       '@type': 'PostalAddress',
       streetAddress: streetAddress || address,

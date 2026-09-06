@@ -6,12 +6,35 @@ import { createPortal } from 'react-dom';
 export function HomepagePopup({ promotion, onDismiss }) {
   const [loaded, setLoaded] = React.useState(false);
   const [dismissed, setDismissed] = React.useState(false);
+  const [verified, setVerified] = React.useState(!!onDismiss);
   const dialog = React.useRef(null);
   const dismiss = React.useCallback(() => {
     setDismissed(true);
     onDismiss?.();
   }, [onDismiss]);
-  const visible = loaded && !dismissed && promotion?.enabled && !!promotion.image;
+  const visible = verified && loaded && !dismissed && promotion?.enabled && !!promotion.image && (!promotion.expiresAt || Date.parse(promotion.expiresAt) > Date.now());
+
+  React.useEffect(() => {
+    if (onDismiss || dismissed || !promotion?.enabled) return;
+    let cancelled = false;
+    let pending = false;
+    const check = async () => {
+      if (pending) return;
+      pending = true;
+      try {
+        const res = await fetch('/api/promotion?status=1', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Unavailable');
+        const { promotion: current } = await res.json();
+        if (cancelled) return;
+        if (!current?.enabled || current.updatedAt !== promotion.updatedAt || (current.expiresAt && Date.parse(current.expiresAt) <= Date.now())) dismiss();
+        else setVerified(true);
+      } catch { if (!cancelled) dismiss(); }
+      finally { pending = false; }
+    };
+    check();
+    const interval = setInterval(check, 1000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [onDismiss, dismissed, promotion?.enabled, promotion?.updatedAt, dismiss]);
 
   React.useEffect(() => {
     if (!promotion?.enabled || !promotion.image) return;
@@ -26,12 +49,13 @@ export function HomepagePopup({ promotion, onDismiss }) {
     if (!visible) return;
     const previousFocus = document.activeElement;
     dialog.current.showModal();
-    const timer = setTimeout(dismiss, 5000);
+    const remaining = promotion.expiresAt ? Date.parse(promotion.expiresAt) - Date.now() : 5000;
+    const timer = setTimeout(dismiss, Math.max(0, Math.min(5000, remaining)));
     return () => {
       clearTimeout(timer);
       if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
     };
-  }, [visible, dismiss]);
+  }, [visible, dismiss, promotion?.expiresAt]);
 
   if (!visible) return null;
   return createPortal(
