@@ -180,7 +180,8 @@ export function TopNav() {
           <div style={{ fontFamily: 'var(--font-body)', fontSize: 17, fontWeight: 700, letterSpacing: '0.04em', marginBottom: 4 }}>
             <a href={`tel:${(settings.phone || '').replace(/\s+/g, '')}`}>{settings.phone}</a>
           </div>
-          <VisitHoursBlock settings={settings} />
+          {/* Live status already shown beside the brand at the top of the drawer */}
+          <VisitHoursBlock settings={settings} showStatus={false} />
         </div>
       </aside>
     </>

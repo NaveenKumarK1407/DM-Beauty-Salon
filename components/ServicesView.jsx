@@ -7,6 +7,41 @@ import { Packages } from './Packages';
 import { SERVICES, SVC_CATEGORIES, IconArrow, IconClock } from '@/lib/data';
 import { cachedFetchJson } from '@/lib/clientCache';
 
+// Long service copy runs 6+ lines on a phone and buries the Book button, so
+// clamp it and let the visitor open it. Self-contained state because the card
+// list is duplicated for the marquee — a shared id would toggle both copies.
+function ServiceDescription({ text }) {
+  const [open, setOpen] = React.useState(false);
+  const [clamped, setClamped] = React.useState(false);
+  const ref = React.useRef(null);
+
+  // Only offer the toggle when the text actually overflows two lines. Measured
+  // while collapsed — once expanded, scrollHeight equals clientHeight and the
+  // overflow is no longer detectable, so skip the check in that state and keep
+  // the last result.
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el || open) return;
+    const check = () => setClamped(el.scrollHeight > el.clientHeight + 1);
+    check();
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [text, open]);
+
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <p ref={ref} className={'svc-desc' + (open ? ' is-open' : '')}>{text}</p>
+      {(clamped || open) && (
+        <button type="button" className="svc-desc-toggle" aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}>
+          {open ? 'Less' : 'More'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 const SkeletonCard = () => (
   <div style={{
     background: '#fff',
@@ -246,15 +281,7 @@ export function ServicesView({ initialServices = null, initialPackages = null })
                       </div>
                     </div>
                     
-                    <p style={{
-                      fontSize: '13px',
-                      color: 'var(--muted)',
-                      lineHeight: 1.5,
-                      margin: 0,
-                      flex: 1
-                    }}>
-                      {s.desc}
-                    </p>
+                    <ServiceDescription text={s.desc} />
 
                     {isAvailable ? (
                       <Link href={`/booking?service=${s.id}`} className="btn btn-primary" style={{

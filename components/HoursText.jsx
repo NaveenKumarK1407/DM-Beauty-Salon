@@ -3,8 +3,11 @@ import React from 'react';
 import { formatHoursLine, DAY_ABBR, normalizeDayName } from '@/lib/hours';
 import { isStudioOpen } from '@/lib/utils';
 
-/** Visit Us card — hours, live status, and closed days on separate lines */
-export function VisitHoursBlock({ settings }) {
+/** Visit Us card — hours, live status, and closed days on separate lines.
+ *  `showStatus={false}` suppresses the OPEN/CLOSED NOW pill for surfaces that
+ *  already show live status elsewhere (the mobile drawer header), so the same
+ *  fact is not repeated twice in one panel. */
+export function VisitHoursBlock({ settings, showStatus = true }) {
   const isOpen = isStudioOpen(settings);
   const closedDays = (settings?.closedDays || []).filter(Boolean);
 
@@ -12,10 +15,12 @@ export function VisitHoursBlock({ settings }) {
     <div className="visit-hours-block">
       <div className="visit-hours-row">
         <span className="visit-hours-line">{formatHoursLine(settings)}</span>
-        <span className={'visit-hours-status' + (isOpen ? ' is-open' : ' is-closed')}>
-          <span className="visit-hours-dot" aria-hidden="true" />
-          {isOpen ? 'OPEN NOW' : 'CLOSED NOW'}
-        </span>
+        {showStatus && (
+          <span className={'visit-hours-status' + (isOpen ? ' is-open' : ' is-closed')}>
+            <span className="visit-hours-dot" aria-hidden="true" />
+            {isOpen ? 'OPEN NOW' : 'CLOSED NOW'}
+          </span>
+        )}
       </div>
       {closedDays.length > 0 && (
         <div className="visit-hours-closed-list">

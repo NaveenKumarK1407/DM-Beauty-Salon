@@ -58,6 +58,18 @@ html, body {
 
 body { min-height: 100vh; }
 
+/* ── Light theme: same gold bokeh backdrop, heavily veiled ──
+   Light mode has no data-theme attribute, so scope by its absence. The image
+   is a dark photo and this palette runs dark ink on cream, so it needs a much
+   stronger veil than dark mode — enough to keep body text at an accessible
+   contrast while the gold still reads as a warm tint. */
+:root:not([data-theme="dark"]) body {
+  background:
+    linear-gradient(rgba(255, 252, 247, 0.88), rgba(255, 251, 244, 0.92)),
+    url('/heropage/bg.webp') center center / cover no-repeat fixed,
+    var(--bg);
+}
+
 img { display: block; max-width: 100%; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
 input, textarea, select { font: inherit; color: var(--ink); }
@@ -145,8 +157,13 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
   padding: 12px 28px;
   max-width: 1420px; margin: 0 auto;
   /* No backdrop blur — a sticky full-width blur re-composites on every
-     scroll frame and was the main source of jank. Near-opaque bg instead. */
-  background: rgba(255,255,255,0.97);
+     scroll frame and was the main source of jank. Near-opaque bg instead.
+     Carries the same gold backdrop as the page, veiled hard so the nav links
+     keep their contrast; `fixed` keeps it registered with the body's copy. */
+  background:
+    linear-gradient(rgba(255, 252, 247, 0.90), rgba(255, 251, 244, 0.93)),
+    url('/heropage/bg.webp') center center / cover no-repeat fixed,
+    rgba(255, 255, 255, 0.97);
   border: 1px solid var(--line);
   border-radius: 18px;
   box-shadow: var(--shadow-2);
@@ -309,7 +326,12 @@ h3 { font-size: clamp(22px, 1.6vw, 30px); }
 .mobile-menu {
   position: fixed; top: 0; left: 0; bottom: 0;
   width: min(340px, 90vw);
-  background: var(--bg);
+  /* Same gold backdrop as the bar it opens from. Veiled heavily — this panel
+     is dense with links, so legibility wins over showing the bokeh. */
+  background:
+    linear-gradient(rgba(255, 252, 247, 0.93), rgba(255, 251, 244, 0.95)),
+    url('/heropage/bg.webp') center center / cover no-repeat fixed,
+    var(--bg);
   z-index: 101;
   transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1060,6 +1082,27 @@ a.map:hover {
 .admin-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
 .panel { background: var(--bg); border-radius: 6px; border: 1px solid var(--line); padding: 28px; }
 
+/* ── Service card description ─────────────────────────────── */
+.svc-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+.svc-desc-toggle {
+  display: none;
+  margin-top: 6px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--gold-deep);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.svc-desc-toggle:hover { text-decoration: underline; }
+
 /* ── Homepage popup cards (admin) ─────────────────────────── */
 .promo-card {
   display: flex;
@@ -1227,7 +1270,22 @@ a.map:hover {
 :root[data-theme="dark"] .svc-card,
 :root[data-theme="dark"] .testi { background: rgba(24, 20, 16, 0.72); }
 :root[data-theme="dark"] .nav { background: transparent; }
-:root[data-theme="dark"] .nav-inner { background: rgba(24,20,16,0.97); border-color: var(--line-2); }
+:root[data-theme="dark"] .mobile-menu {
+  background:
+    linear-gradient(rgba(20, 17, 13, 0.90), rgba(20, 17, 13, 0.93)),
+    url('/heropage/bg.webp') center center / cover no-repeat fixed,
+    var(--bg);
+}
+/* The bar carries the same gold backdrop as the page. `fixed` attachment
+   means the bokeh stays registered with the body's copy behind it rather than
+   restarting inside the bar. */
+:root[data-theme="dark"] .nav-inner {
+  background:
+    linear-gradient(rgba(20, 17, 13, 0.86), rgba(20, 17, 13, 0.90)),
+    url('/heropage/bg.webp') center center / cover no-repeat fixed,
+    rgba(24, 20, 16, 0.97);
+  border-color: var(--line-2);
+}
 :root[data-theme="dark"] .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 :root[data-theme="dark"] .btn-primary:hover { background: var(--gold); color: var(--bg); border-color: var(--gold); }
 :root[data-theme="dark"] .hero-tag { background: rgba(15,13,10,0.92); color: var(--ink); }
@@ -1350,6 +1408,14 @@ a.map:hover {
 :root[data-theme="dark"] .section-soft,
 :root[data-theme="dark"] .section-dark,
 :root[data-theme="dark"] .footer { background: transparent !important; }
+/* Light mode: only the soft cream band opens onto the backdrop. section-dark,
+   the marquee and the footer are inverted panels here — they are meant to read
+   as solid dark blocks against a light page, so they stay opaque. */
+:root:not([data-theme="dark"]) .section-soft { background: transparent; }
+:root:not([data-theme="dark"]) .panel,
+:root:not([data-theme="dark"]) .visit-card,
+:root:not([data-theme="dark"]) .svc-card,
+:root:not([data-theme="dark"]) .testi { background: rgba(255, 255, 255, 0.86); }
 :root[data-theme="dark"] .footer h4,
 /* Dark theme — bolder brand in the top app bar for presence on dark bg.
    The display serifs are thin even at 700, so a text-stroke does the
@@ -1744,7 +1810,9 @@ a.map:hover {
     text-transform: uppercase;
   }
   .nav-inner .brand-day-prefix {
-    color: #ffffff;
+    /* Was hard-coded #fff, which vanished against the cream nav in light
+       theme. The ink token flips with the theme. */
+    color: var(--ink);
   }
   .nav-inner .brand-day-sep {
     color: var(--muted);
@@ -1794,6 +1862,22 @@ a.map:hover {
   /* Compact admin-head button row */
   .admin-head > div:last-child { gap: 8px; }
   .admin-head .btn { padding: 9px 16px; font-size: 10px; letter-spacing: 0.12em; }
+  /* Service copy: two lines by default, expanded by the More/Less toggle.
+     Desktop keeps the full text — there is room for it there. */
+  .svc-desc {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+  .svc-desc.is-open {
+    -webkit-line-clamp: unset;
+    line-clamp: unset;
+    overflow: visible;
+  }
+  .svc-desc-toggle { display: inline-block; }
+
   /* Popup cards: keep Edit / Pause / delete-icon on a single row */
   .promo-card { gap: 10px; padding: 10px; }
   .promo-card-thumb { width: 64px; height: 64px; }
