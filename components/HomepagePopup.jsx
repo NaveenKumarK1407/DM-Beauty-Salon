@@ -12,7 +12,7 @@ export function HomepagePopup({ promotion, onDismiss }) {
     setDismissed(true);
     onDismiss?.();
   }, [onDismiss]);
-  const visible = verified && loaded && !dismissed && promotion?.enabled && !!promotion.image && (!promotion.expiresAt || Date.parse(promotion.expiresAt) > Date.now());
+  const visible = verified && loaded && !dismissed && promotion?.enabled && !!promotion.image && (!promotion.endAt || Date.parse(promotion.endAt) > Date.now());
 
   React.useEffect(() => {
     if (onDismiss || dismissed || !promotion?.enabled) return;
@@ -26,7 +26,10 @@ export function HomepagePopup({ promotion, onDismiss }) {
         if (!res.ok) throw new Error('Unavailable');
         const { promotion: current } = await res.json();
         if (cancelled) return;
-        if (!current?.enabled || current.updatedAt !== promotion.updatedAt || (current.expiresAt && Date.parse(current.expiresAt) <= Date.now())) dismiss();
+        // A deleted, paused, replaced or expired banner all resolve to "not
+        // this one any more" — close rather than keep showing a stale poster.
+        if (!current?.enabled || current.id !== promotion.id || current.updatedAt !== promotion.updatedAt ||
+            (current.endAt && Date.parse(current.endAt) <= Date.now())) dismiss();
         else setVerified(true);
       } catch { if (!cancelled) dismiss(); }
       finally { pending = false; }
@@ -34,7 +37,7 @@ export function HomepagePopup({ promotion, onDismiss }) {
     check();
     const interval = setInterval(check, 1000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [onDismiss, dismissed, promotion?.enabled, promotion?.updatedAt, dismiss]);
+  }, [onDismiss, dismissed, promotion?.enabled, promotion?.updatedAt, promotion?.id, dismiss]);
 
   React.useEffect(() => {
     if (!promotion?.enabled || !promotion.image) return;
@@ -49,13 +52,13 @@ export function HomepagePopup({ promotion, onDismiss }) {
     if (!visible) return;
     const previousFocus = document.activeElement;
     dialog.current.showModal();
-    const remaining = promotion.expiresAt ? Date.parse(promotion.expiresAt) - Date.now() : 5000;
+    const remaining = promotion.endAt ? Date.parse(promotion.endAt) - Date.now() : 5000;
     const timer = setTimeout(dismiss, Math.max(0, Math.min(5000, remaining)));
     return () => {
       clearTimeout(timer);
       if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
     };
-  }, [visible, dismiss, promotion?.expiresAt]);
+  }, [visible, dismiss, promotion?.endAt]);
 
   if (!visible) return null;
   return createPortal(
