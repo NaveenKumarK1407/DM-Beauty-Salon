@@ -1207,7 +1207,25 @@ a.map:hover {
   --shadow-2: 0 8px 30px rgba(0,0,0,.45);
   --shadow-hover: 0 20px 50px rgba(0,0,0,.55);
 }
-:root[data-theme="dark"] body { background: var(--bg); }
+/* ── Dark theme: gold bokeh page backdrop ──────────────────
+   One fixed layer behind everything, so it stays put while the page scrolls
+   instead of tiling or stretching per-section. The hero is excluded — it
+   carries its own full-bleed artwork and paints over this. */
+/* Painted on <body> itself, not a ::before at z-index -1 — that would sit
+   behind the body's own opaque fill and never be seen. `fixed` keeps the
+   bokeh still while the page scrolls. */
+:root[data-theme="dark"] body {
+  background:
+    linear-gradient(rgba(15, 13, 10, 0.58), rgba(15, 13, 10, 0.72)),
+    url('/heropage/bg.webp') center center / cover no-repeat fixed,
+    var(--bg);
+}
+/* The solid section fills would hide the backdrop, so let it through while
+   keeping enough tint for text contrast. */
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .visit-card,
+:root[data-theme="dark"] .svc-card,
+:root[data-theme="dark"] .testi { background: rgba(24, 20, 16, 0.72); }
 :root[data-theme="dark"] .nav { background: transparent; }
 :root[data-theme="dark"] .nav-inner { background: rgba(24,20,16,0.97); border-color: var(--line-2); }
 :root[data-theme="dark"] .btn-primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
@@ -1325,6 +1343,13 @@ a.map:hover {
 :root[data-theme="dark"] .marquee { background: #ecdcc5 !important; color: #1a1a1a !important; border-top: 0; border-bottom: 0; }
 :root[data-theme="dark"] .marquee .marquee-item::after { color: #8c6a44; }
 :root[data-theme="dark"] .footer { background: var(--bg-soft) !important; color: var(--muted) !important; }
+/* Let the gold bokeh page backdrop through the full-width bands. Placed after
+   the rules above because those set the same properties with !important.
+   The marquee is deliberately left opaque — it is meant to be a
+   high-contrast strip, not a window onto the background. */
+:root[data-theme="dark"] .section-soft,
+:root[data-theme="dark"] .section-dark,
+:root[data-theme="dark"] .footer { background: transparent !important; }
 :root[data-theme="dark"] .footer h4,
 /* Dark theme — bolder brand in the top app bar for presence on dark bg.
    The display serifs are thin even at 700, so a text-stroke does the
